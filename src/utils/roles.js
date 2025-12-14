@@ -1,15 +1,15 @@
 export const sidebarMenu = {
   ADMIN: [
     { label: "Dashboard", path: "/dashboard" },
-    { label: "Employees", path: "/employees" },
-    { label: "Tickets", path: "/admin/tickets" },
+    { label: "Employees", path: "/add-employee" },
+    { label: "Tickets", path: "/tickets" },
     { label: "Attendance", path: "/attendance" },
     { label: "Salary", path: "/salary" },
     { label: "Live Map", path: "/live-map" },
   ],
 
   EMPLOYEE: [
-    { label: "My Tickets", path: "/tickets" },
+    { label: "My Tickets", path: "/my-tickets" },
     { label: "Attendance", path: "/attendance" },
     { label: "Leave Applications", path: "/leaves" },
   ],

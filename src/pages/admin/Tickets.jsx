@@ -1,43 +1,42 @@
 import { useEffect, useState } from "react";
-import { getTickets, assignEngineer } from "../../api/tickets";
 import TicketTable from "../tickets/TicketTable";
 import AssignEngineerModal from "../tickets/AssignEngineerModal";
-import api from "../../api/axios";
+import { getTickets } from "../../api/tickets";
 
 export default function AdminTickets() {
   const [tickets, setTickets] = useState([]);
-  const [engineers, setEngineers] = useState([]);
-  const [selected, setSelected] = useState(null);
+  const [selectedTicket, setSelectedTicket] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const loadTickets = async () => {
+    try {
+      setLoading(true);
+      const res = await getTickets();
+      setTickets(res.data);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    loadData();
+    loadTickets();
   }, []);
-
-  const loadData = async () => {
-    const t = await getTickets();
-    const e = await api.get("/employees");
-    setTickets(t.data);
-    setEngineers(e.data);
-  };
-
-  const handleAssign = async (data) => {
-    await assignEngineer(selected._id, data.engineerId);
-    setSelected(null);
-    loadData();
-  };
 
   return (
     <div className="p-6 space-y-6">
       <h1 className="text-2xl font-bold">Tickets</h1>
 
-      <TicketTable tickets={tickets} onAssignClick={setSelected} />
+      <TicketTable
+        tickets={tickets}
+        loading={loading}
+        onAssignClick={setSelectedTicket}
+      />
 
-      {selected && (
+      {selectedTicket && (
         <AssignEngineerModal
-          ticket={selected}
-          engineers={engineers}
-          onAssign={handleAssign}
-          onClose={() => setSelected(null)}
+          open={!!selectedTicket}
+          ticket={selectedTicket}
+          onClose={() => setSelectedTicket(null)}
+          onSuccess={loadTickets}
         />
       )}
     </div>

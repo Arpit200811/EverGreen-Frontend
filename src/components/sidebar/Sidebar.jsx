@@ -5,7 +5,6 @@ import { sidebarMenu } from "../../utils/roles";
 
 export default function Sidebar({ isOpen, closeSidebar }) {
   const { user } = useAuth();
-  console.log(user);
   if (!user) return null;
   const menu = sidebarMenu[user.role] || [];
   const isMobile = window.innerWidth < 768;

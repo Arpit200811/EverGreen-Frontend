@@ -4,18 +4,41 @@ import Login from "../pages/auth/Login";
 import AdminDashboard from "../pages/dashboard/AdminDashboard";
 import AdminTickets from "../pages/admin/Tickets";
 import ProtectedRoute from "./ProtectedRoute";
+import CreateTicket from "../pages/customer/CreateTicket";
+import Employees from "../pages/employee/Employees";
+import EmployeeTickets from "../pages/employee/MyTickets";
+
+
 
 export default function AppRouter() {
   return (
     <Routes>
+      {/* Public */}
       <Route path="/" element={<Login />} />
-      <Route element={<ProtectedRoute allowedRoles={["ADMIN"]} />}>
+
+      {/* ADMIN ROUTES */}
+      <Route element={<ProtectedRoute roles={["ADMIN"]} />}>
         <Route element={<Layout />}>
-          <Route path="/dashboard/*" element={<AdminDashboard />} />
-          <Route path="/admin/tickets" element={<AdminTickets />} />
+          <Route path="/dashboard" element={<AdminDashboard />} />
+          <Route path="/tickets" element={<AdminTickets />} />
+          <Route path="/add-employee" element={<Employees />} />
         </Route>
       </Route>
+
+      {/* EMPLOYEE ROUTES */}
+      <Route element={<ProtectedRoute roles={["EMPLOYEE"]} />}>
+        <Route element={<Layout />}>
+          <Route path="/employee" element={<div>Employee Home</div>} />
+          <Route path="/my-tickets" element={<EmployeeTickets/>} />
+        </Route>
+      </Route>
+
+      <Route element={<ProtectedRoute allowedRoles={["CUSTOMER"]} />}>
+        <Route element={<Layout />}>
+          <Route path="/tickets/create" element={<CreateTicket />} />
+        </Route>
+      </Route>
+
     </Routes>
   );
 }
-              

@@ -33,7 +33,7 @@ export default function AdminDashboard() {
         <Card className="shadow rounded-xl">
           <CardContent className="p-5">
             <h3 className="text-sm text-gray-500">Employees</h3>
-            <p className="text-2xl font-bold">42</p>
+            <p className="text-2xl font-bold">48</p>
           </CardContent>
         </Card>
 

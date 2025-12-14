@@ -6,7 +6,7 @@ export default function ProtectedRoute() {
 
   if (loading) return <div className="p-10">Loading...</div>;
 
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) return <Navigate to="/" replace />;
 
   return <Outlet />;
 }

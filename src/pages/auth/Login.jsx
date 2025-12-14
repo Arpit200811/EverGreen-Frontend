@@ -34,7 +34,7 @@ export default function Login() {
 
         login(res.data.user, res.data.token);
 
-        if (res.data.user.role === "ADMIN") navigate("/admin");
+        if (res.data.user.role === "ADMIN") navigate("/dashboard");
         else if (res.data.user.role === "EMPLOYEE") navigate("/employee");
         else navigate("/customer");
       } catch (err) {

@@ -1,37 +1,86 @@
-import { useForm } from "react-hook-form";
-import { X } from "lucide-react";
+import { Dialog } from "@headlessui/react";
+import { useEffect, useState } from "react";
+import { ClipLoader } from "react-spinners";
+import { getEngineers } from "../../api/employees";
+import { assignEngineer } from "../../api/tickets";
 
-export default function AssignEngineerModal({ ticket, engineers, onAssign, onClose }) {
-  const { register, handleSubmit } = useForm();
+export default function AssignEngineerModal({
+  open,
+  onClose,
+  ticket,
+  onSuccess,
+}) {
+  const [engineers, setEngineers] = useState([]);
+  const [selected, setSelected] = useState("");
+  const [loading, setLoading] = useState(false);
+  useEffect(() => {
+    if (!open) return;
+    getEngineers().then((res) => {
+      setEngineers(res.data);
+    });
+  }, [open]);
+  const handleAssign = async () => {
+    if (!selected) return alert("Select engineer");
+    try {
+      setLoading(true);
+      await assignEngineer(ticket._id, selected);
+      onSuccess();      // refresh tickets
+      onClose();
+    } catch (err) {
+      alert(err.response?.data?.message || "Assign failed");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <form
-        onSubmit={handleSubmit(onAssign)}
-        className="bg-white w-96 rounded-xl p-6 space-y-4"
-      >
-        <div className="flex justify-between items-center">
-          <h2 className="text-lg font-semibold">Assign Engineer</h2>
-          <X className="cursor-pointer" onClick={onClose} />
-        </div>
+    <Dialog open={open} onClose={onClose} className="relative z-50">
+      <div className="fixed inset-0 bg-black/40" />
 
-        <select
-          {...register("engineerId")}
-          className="w-full border p-2 rounded"
-          required
-        >
-          <option value="">Select Engineer</option>
-          {engineers.map((e) => (
-            <option key={e._id} value={e._id}>
-              {e.name}
-            </option>
-          ))}
-        </select>
+      <div className="fixed inset-0 flex items-center justify-center">
+        <Dialog.Panel className="bg-white w-full max-w-md rounded-lg p-6 shadow-xl">
+          <Dialog.Title className="text-xl font-semibold text-emerald-700 mb-4">
+            Assign Engineer
+          </Dialog.Title>
 
-        <button className="w-full bg-emerald-600 text-white py-2 rounded">
-          Assign
-        </button>
-      </form>
-    </div>
+          <p className="text-sm text-gray-600 mb-3">
+            Ticket: <b>{ticket?.deviceType}</b>
+          </p>
+
+          {/* Dropdown */}
+          <select
+            value={selected}
+            onChange={(e) => setSelected(e.target.value)}
+            className="w-full border rounded px-3 py-2 mb-5"
+          >
+            <option value="">Select Engineer</option>
+            {engineers.map((e) => (
+              <option key={e._id} value={e._id}>
+                {e.name}
+              </option>
+            ))}
+          </select>
+
+          {/* Actions */}
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={onClose}
+              className="px-4 py-2 border rounded"
+            >
+              Cancel
+            </button>
+
+            <button
+              onClick={handleAssign}
+              disabled={loading}
+              className="px-4 py-2 bg-emerald-600 text-white rounded flex items-center gap-2"
+            >
+              {loading && <ClipLoader size={16} color="#fff" />}
+              Assign
+            </button>
+          </div>
+        </Dialog.Panel>
+      </div>
+    </Dialog>
   );
 }
