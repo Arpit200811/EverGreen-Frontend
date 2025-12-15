@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "http://localhost:5000",
+  baseURL: "https://evergreen-backend-kgck.onrender.com",
 });
 
 API.interceptors.request.use((config) => {
