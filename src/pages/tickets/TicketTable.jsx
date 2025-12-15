@@ -14,9 +14,7 @@ export default function TicketTable({ tickets = [], loading, onAssignClick }) {
   }
   if (!tickets.length) {
     return (
-      <div className="text-center py-10 text-gray-500">
-        No tickets found
-      </div>
+      <div className="text-center py-10 text-gray-500">No tickets found</div>
     );
   }
 
@@ -38,44 +36,37 @@ export default function TicketTable({ tickets = [], loading, onAssignClick }) {
 
         <tbody className="text-sm">
           {tickets.map((t, index) => {
-            const canAssign =
-              user?.role === "ADMIN" && !t.assignedEngineer;
+            const canAssign = user?.role === "ADMIN" && !t.assignedEngineer;
 
             return (
-              <tr
-                key={t._id}
-                className="border-t hover:bg-gray-50 transition"
-              >
-                <td className="p-3">{index + 1}</td>
-
-                <td className="p-3 font-medium">
-                  {t.customer?.name || "—"}
-                </td>
-
+              <tr key={t._id} className="border-t hover:bg-gray-50 transition">
+                <td className="p-3">{index + 1}.</td>
+                <td className="p-3 font-medium">{t.customer?.name || "—"}</td>
                 <td className="p-3">{t.deviceType}</td>
-
                 <td className="p-3">
                   <TicketStatusBadge status={t.status} />
                 </td>
-
-                <td className="p-3 max-w-xs truncate" title={t.issueDescription}>
+                <td
+                  className="p-3 max-w-xs truncate"
+                  title={t.issueDescription}
+                >
                   {t.issueDescription || "—"}
                 </td>
-
                 <td className="p-3">
                   {t.assignedEngineer?.name || (
                     <span className="text-gray-400">Not Assigned</span>
                   )}
                 </td>
-
                 <td className="p-3">
-                  {t.estimatedCost
-                    ? `₹ ${t.estimatedCost}`
-                    : <span className="text-gray-400">—</span>}
+                  {t.estimatedCost ? (
+                    `₹ ${t.estimatedCost}`
+                  ) : (
+                    <span className="text-gray-400">—</span>
+                  )}
                 </td>
-
-                <td className="p-3">
-                  {canAssign ? (
+                <td className="p-3 space-y-1">
+                  {/* ADMIN → ASSIGN */}
+                  {canAssign && (
                     <button
                       onClick={() => onAssignClick(t)}
                       className="text-emerald-600 flex items-center gap-1 hover:underline"
@@ -83,11 +74,28 @@ export default function TicketTable({ tickets = [], loading, onAssignClick }) {
                       <UserPlus size={16} />
                       Assign
                     </button>
-                  ) : (
-                    <span className="text-gray-400 text-xs">
-                      —
-                    </span>
                   )}
+
+                  {/* ADMIN → DOWNLOAD RECEIPT */}
+                  {user?.role === "ADMIN" &&
+                    t.status === "COMPLETED" &&
+                    t.receiptImage && (
+                      <a
+                        href={t.receiptImage}
+                        download={`receipt-${t._id}.png`}
+                        className="text-blue-600 text-xs underline block"
+                      >
+                        Download Receipt
+                      </a>
+                    )}
+
+                  {/* fallback */}
+                  {!canAssign &&
+                    !(
+                      user?.role === "ADMIN" &&
+                      t.status === "COMPLETED" &&
+                      t.receiptImage
+                    ) && <span className="text-gray-400 text-xs">—</span>}
                 </td>
               </tr>
             );

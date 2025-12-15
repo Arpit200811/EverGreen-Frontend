@@ -7,9 +7,9 @@ import ProtectedRoute from "./ProtectedRoute";
 import CreateTicket from "../pages/customer/CreateTicket";
 import Employees from "../pages/employee/Employees";
 import EmployeeTickets from "../pages/employee/MyTickets";
-
-
-
+import TicketDetail from "../pages/tickets/TicketDetail";
+import EmployeeAttendance from "../pages/employee/Attendance";
+import AdminAttendance from "../pages/admin/Attendance";
 export default function AppRouter() {
   return (
     <Routes>
@@ -22,6 +22,7 @@ export default function AppRouter() {
           <Route path="/dashboard" element={<AdminDashboard />} />
           <Route path="/tickets" element={<AdminTickets />} />
           <Route path="/add-employee" element={<Employees />} />
+          <Route path="/admin-attendance" element={<AdminAttendance />} />
         </Route>
       </Route>
 
@@ -30,12 +31,14 @@ export default function AppRouter() {
         <Route element={<Layout />}>
           <Route path="/employee" element={<div>Employee Home</div>} />
           <Route path="/my-tickets" element={<EmployeeTickets/>} />
+          <Route path="/employee-attendance" element={<EmployeeAttendance/>} />
         </Route>
       </Route>
 
       <Route element={<ProtectedRoute allowedRoles={["CUSTOMER"]} />}>
         <Route element={<Layout />}>
-          <Route path="/tickets/create" element={<CreateTicket />} />
+          <Route path="/tickets/create" element={<CreateTicket/>} />
+          <Route path="/tickets/:id" element={<TicketDetail />} />
         </Route>
       </Route>
 
