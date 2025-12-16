@@ -48,21 +48,23 @@ export default function EmployeeTickets() {
     reader.readAsDataURL(file);
   };
 
-  if (loading) return <p>Loading...</p>;
+  if (loading) return <p className="p-4">Loading...</p>;
 
   return (
-    <div className="p-6">
-      <h1 className="text-xl font-bold mb-4">My Tickets</h1>
+    <div className="p-4 sm:p-6">
+      <h1 className="text-lg sm:text-xl font-bold mb-4">My Tickets</h1>
 
       <div className="grid gap-4">
         {tickets.map(t => (
           <div
             key={t._id}
-            className="border rounded p-4 shadow bg-white flex justify-between items-center"
+            className="border rounded p-4 shadow bg-white flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4"
           >
             <div>
               <p className="font-semibold">{t.deviceType}</p>
-              <p className="text-sm text-gray-600">{t.issueDescription}</p>
+              <p className="text-sm text-gray-600 break-words">
+                {t.issueDescription}
+              </p>
               <p className="text-xs mt-1">
                 Status:
                 <span className="ml-1 font-semibold text-blue-600">
@@ -72,10 +74,10 @@ export default function EmployeeTickets() {
             </div>
 
             {/* ACTIONS */}
-            <div className="flex gap-2">
+            <div className="flex gap-2 w-full sm:w-auto">
               {t.status === 'ASSIGNED' && (
                 <button
-                  className="bg-blue-600 text-white px-4 py-1 rounded"
+                  className="bg-blue-600 text-white px-4 py-1 rounded w-full sm:w-auto"
                   onClick={() => startTicket(t._id)}
                 >
                   Start
@@ -84,7 +86,7 @@ export default function EmployeeTickets() {
 
               {t.status === 'IN_PROGRESS' && (
                 <button
-                  className="bg-green-600 text-white px-4 py-1 rounded"
+                  className="bg-green-600 text-white px-4 py-1 rounded w-full sm:w-auto"
                   onClick={() => setSelected(t)}
                 >
                   Complete
@@ -92,7 +94,9 @@ export default function EmployeeTickets() {
               )}
 
               {t.status === 'COMPLETED' && (
-                <span className="text-gray-400 text-sm">Done</span>
+                <span className="text-gray-400 text-sm self-center">
+                  Done
+                </span>
               )}
             </div>
           </div>
@@ -101,20 +105,22 @@ export default function EmployeeTickets() {
 
       {/* ---------------- COMPLETE MODAL ---------------- */}
       {selected && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
-          <div className="bg-white p-6 rounded w-96">
-            <h3 className="font-bold mb-4">Complete Ticket</h3>
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center px-3 z-50">
+          <div className="bg-white p-4 sm:p-6 rounded w-full max-w-sm">
+            <h3 className="font-bold mb-4 text-lg">
+              Complete Ticket
+            </h3>
 
             <input
               type="file"
               accept="image/*"
               onChange={handleFile}
-              className="mb-4"
+              className="mb-4 w-full text-sm"
             />
 
-            <div className="flex justify-end gap-2">
+            <div className="flex flex-col sm:flex-row justify-end gap-2">
               <button
-                className="border px-4 py-2 rounded"
+                className="border px-4 py-2 rounded w-full sm:w-auto"
                 onClick={() => setSelected(null)}
               >
                 Cancel
@@ -122,7 +128,7 @@ export default function EmployeeTickets() {
 
               <button
                 disabled={!receipt}
-                className="bg-green-600 text-white px-4 py-2 rounded disabled:opacity-50"
+                className="bg-green-600 text-white px-4 py-2 rounded disabled:opacity-50 w-full sm:w-auto"
                 onClick={completeTicket}
               >
                 Complete

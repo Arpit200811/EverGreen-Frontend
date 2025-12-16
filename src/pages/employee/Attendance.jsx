@@ -34,11 +34,11 @@ export default function EmployeeAttendance() {
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-bold">My Attendance</h1>
+    <div className="p-4 sm:p-6 space-y-6">
+      <h1 className="text-xl sm:text-2xl font-bold">My Attendance</h1>
 
       {/* ---------- TODAY CARD ---------- */}
-      <div className="bg-white shadow rounded p-4 flex justify-between items-center">
+      <div className="bg-white shadow rounded p-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
           <p className="font-semibold">Today</p>
           <p className="text-sm text-gray-600">
@@ -46,11 +46,11 @@ export default function EmployeeAttendance() {
           </p>
         </div>
 
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
           {!today && (
             <button
               onClick={handleCheckIn}
-              className="bg-emerald-600 text-white px-4 py-2 rounded"
+              className="bg-emerald-600 text-white px-4 py-2 rounded w-full sm:w-auto"
             >
               Check In
             </button>
@@ -59,7 +59,7 @@ export default function EmployeeAttendance() {
           {today && !today.checkOut && (
             <button
               onClick={handleCheckOut}
-              className="bg-blue-600 text-white px-4 py-2 rounded"
+              className="bg-blue-600 text-white px-4 py-2 rounded w-full sm:w-auto"
             >
               Check Out
             </button>
@@ -74,28 +74,34 @@ export default function EmployeeAttendance() {
             <ClipLoader color="#059669" />
           </div>
         ) : (
-          <table className="w-full text-sm">
+          <table className="w-full min-w-[640px] text-xs sm:text-sm">
             <thead className="bg-gray-100">
               <tr>
-                <th className="p-3">Date</th>
-                <th className="p-3">Check In</th>
-                <th className="p-3">Check Out</th>
-                <th className="p-3">Hours</th>
-                <th className="p-3">Status</th>
+                <th className="p-3 text-left">Date</th>
+                <th className="p-3 text-left">Check In</th>
+                <th className="p-3 text-left">Check Out</th>
+                <th className="p-3 text-left">Hours</th>
+                <th className="p-3 text-left">Status</th>
               </tr>
             </thead>
             <tbody>
               {records.map(r => (
                 <tr key={r._id} className="border-t">
-                  <td className="p-3">{r.date}</td>
-                  <td className="p-3">
-                    {r.checkIn ? new Date(r.checkIn).toLocaleTimeString() : "—"}
+                  <td className="p-3 whitespace-nowrap">{r.date}</td>
+                  <td className="p-3 whitespace-nowrap">
+                    {r.checkIn
+                      ? new Date(r.checkIn).toLocaleTimeString()
+                      : "—"}
                   </td>
-                  <td className="p-3">
-                    {r.checkOut ? new Date(r.checkOut).toLocaleTimeString() : "—"}
+                  <td className="p-3 whitespace-nowrap">
+                    {r.checkOut
+                      ? new Date(r.checkOut).toLocaleTimeString()
+                      : "—"}
                   </td>
-                  <td className="p-3">{r.workingHours || "—"}</td>
-                  <td className="p-3 font-medium">
+                  <td className="p-3 whitespace-nowrap">
+                    {r.workingHours || "—"}
+                  </td>
+                  <td className="p-3 font-medium whitespace-nowrap">
                     {r.status}
                   </td>
                 </tr>

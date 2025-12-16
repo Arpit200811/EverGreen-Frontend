@@ -36,48 +36,54 @@ export default function CreateTicket() {
   };
 
   return (
-    <div className="max-w-xl mx-auto mt-10 bg-white p-6 rounded-lg shadow">
-      <h2 className="text-2xl font-semibold text-emerald-700 mb-6">
-        Create Service Ticket
-      </h2>
+    <div className="min-h-screen flex items-start sm:items-center justify-center px-4 sm:px-6">
+      <div className="w-full max-w-md sm:max-w-xl bg-white p-4 sm:p-6 rounded-lg shadow mt-6 sm:mt-0">
+        <h2 className="text-lg sm:text-2xl font-semibold text-emerald-700 mb-5 sm:mb-6 text-center sm:text-left">
+          Create Service Ticket
+        </h2>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        {/* Device */}
-        <div>
-          <label className="block text-sm font-medium">Device Type</label>
-          <input
-            {...register("deviceType")}
-            className="w-full border rounded px-3 py-2 mt-1"
-            placeholder="Laptop / AC / TV"
-          />
-          <p className="text-red-500 text-xs">{errors.deviceType?.message}</p>
-        </div>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          {/* Device */}
+          <div>
+            <label className="block text-sm font-medium">
+              Device Type
+            </label>
+            <input
+              {...register("deviceType")}
+              className="w-full border rounded px-3 py-2 mt-1 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              placeholder="Laptop / AC / TV"
+            />
+            <p className="text-red-500 text-xs mt-1">
+              {errors.deviceType?.message}
+            </p>
+          </div>
 
-        {/* Issue */}
-        <div>
-          <label className="block text-sm font-medium">
-            Issue Description
-          </label>
-          <textarea
-            {...register("issueDescription")}
-            rows="4"
-            className="w-full border rounded px-3 py-2 mt-1"
-            placeholder="Describe the issue..."
-          />
-          <p className="text-red-500 text-xs">
-            {errors.issueDescription?.message}
-          </p>
-        </div>
+          {/* Issue */}
+          <div>
+            <label className="block text-sm font-medium">
+              Issue Description
+            </label>
+            <textarea
+              {...register("issueDescription")}
+              rows="4"
+              className="w-full border rounded px-3 py-2 mt-1 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              placeholder="Describe the issue..."
+            />
+            <p className="text-red-500 text-xs mt-1">
+              {errors.issueDescription?.message}
+            </p>
+          </div>
 
-        {/* Submit */}
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-emerald-600 text-white py-2 rounded flex justify-center"
-        >
-          {loading ? <ClipLoader color="#fff" size={22} /> : "Create Ticket"}
-        </button>
-      </form>
+          {/* Submit */}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-emerald-600 hover:bg-emerald-700 transition text-white py-2 rounded flex justify-center items-center text-sm sm:text-base"
+          >
+            {loading ? <ClipLoader color="#fff" size={22} /> : "Create Ticket"}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }

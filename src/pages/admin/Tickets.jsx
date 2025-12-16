@@ -7,6 +7,7 @@ export default function AdminTickets() {
   const [tickets, setTickets] = useState([]);
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [loading, setLoading] = useState(true);
+
   const loadTickets = async () => {
     try {
       setLoading(true);
@@ -22,14 +23,16 @@ export default function AdminTickets() {
   }, []);
 
   return (
-    <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-bold">Tickets</h1>
+    <div className="p-4 sm:p-6 space-y-6">
+      <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Tickets</h1>
 
-      <TicketTable
-        tickets={tickets}
-        loading={loading}
-        onAssignClick={setSelectedTicket}
-      />
+      <div className="overflow-x-auto">
+        <TicketTable
+          tickets={tickets}
+          loading={loading}
+          onAssignClick={setSelectedTicket}
+        />
+      </div>
 
       {selectedTicket && (
         <AssignEngineerModal

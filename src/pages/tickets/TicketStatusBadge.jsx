@@ -8,7 +8,18 @@ export default function TicketStatusBadge({ status }) {
   };
 
   return (
-    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${colors[status]}`}>
+    <span
+      className={`
+        inline-flex items-center
+        px-2 sm:px-3
+        py-0.5 sm:py-1
+        rounded-full
+        text-[10px] sm:text-xs
+        font-semibold
+        whitespace-nowrap
+        ${colors[status]}
+      `}
+    >
       {status}
     </span>
   );
