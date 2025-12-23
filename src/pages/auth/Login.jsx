@@ -1,5 +1,5 @@
+import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import API from "../../api/axios";
 import { useFormik } from "formik";
@@ -14,12 +14,14 @@ export default function Login() {
 
   const formik = useFormik({
     initialValues: { email: "", password: "" },
+
     validationSchema: Yup.object({
       email: Yup.string().email("Invalid email").required("Email is required"),
       password: Yup.string()
         .min(6, "Minimum 6 characters")
         .required("Password is required"),
     }),
+
     onSubmit: async (values) => {
       try {
         setLoading(true);
@@ -28,9 +30,11 @@ export default function Login() {
         const res = await API.post("/auth/login", values);
         login(res.data.user, res.data.token);
 
-        if (res.data.user.role === "ADMIN") navigate("/dashboard");
-        else if (res.data.user.role === "EMPLOYEE") navigate("/employee");
-        else navigate("/customer");
+        const role = res.data.user.role;
+
+        if (role === "ADMIN") navigate("/dashboard");
+        else if (role === "EMPLOYEE") navigate("/employee");
+        else navigate("/customer"); // ✅ FIX
       } catch (err) {
         setError(err.response?.data?.message || "Login failed");
       } finally {
@@ -40,20 +44,18 @@ export default function Login() {
   });
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-600 to-emerald-900 px-4 sm:px-6">
-      <div className="w-full max-w-md sm:max-w-lg bg-white rounded-2xl shadow-2xl p-6 sm:p-8">
-        
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-600 to-emerald-900 px-4">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-6 sm:p-8">
+
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl sm:text-4xl font-bold text-emerald-700">
+          <h1 className="text-3xl font-bold text-emerald-700">
             Evergreen EMS
           </h1>
-          <p className="text-gray-500 mt-1 text-sm sm:text-base">
-            Sign in to your account
-          </p>
+          <p className="text-gray-500 mt-1">Sign in to your account</p>
         </div>
 
-        {/* Error Message */}
+        {/* Error */}
         {error && (
           <div className="mb-4 text-sm text-red-600 bg-red-50 p-3 rounded-lg">
             {error}
@@ -62,7 +64,7 @@ export default function Login() {
 
         {/* Form */}
         <form onSubmit={formik.handleSubmit} className="space-y-5">
-          
+
           {/* Email */}
           <div>
             <label className="block text-sm font-medium text-gray-600 mb-1">
@@ -74,8 +76,9 @@ export default function Login() {
                 type="email"
                 name="email"
                 onChange={formik.handleChange}
+                onBlur={formik.handleBlur}   // ✅ FIX
                 value={formik.values.email}
-                className="w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm sm:text-base"
+                className="w-full pl-10 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500"
                 placeholder="admin@evergreen.com"
               />
             </div>
@@ -95,8 +98,9 @@ export default function Login() {
                 type="password"
                 name="password"
                 onChange={formik.handleChange}
+                onBlur={formik.handleBlur}   // ✅ FIX
                 value={formik.values.password}
-                className="w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm sm:text-base"
+                className="w-full pl-10 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500"
                 placeholder="••••••••"
               />
             </div>
@@ -109,15 +113,26 @@ export default function Login() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded-lg font-semibold transition disabled:opacity-70 text-sm sm:text-base"
+            className="w-full flex justify-center items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded-lg font-semibold disabled:opacity-70"
           >
             {loading && <Loader2 className="h-5 w-5 animate-spin" />}
             {loading ? "Signing in..." : "Login"}
           </button>
         </form>
 
+        {/* Links */}
+        <div className="flex justify-between mt-4 text-sm">
+          <Link to="/register" className="text-emerald-600 hover:underline">
+            Create account
+          </Link>
+
+          <Link to="/forgot-password" className="text-emerald-600 hover:underline">
+            Forgot Password?
+          </Link>
+        </div>
+
         {/* Footer */}
-        <p className="text-center text-xs sm:text-sm text-gray-400 mt-6">
+        <p className="text-center text-xs text-gray-400 mt-6">
           © Evergreen EMS • Secure Login
         </p>
       </div>

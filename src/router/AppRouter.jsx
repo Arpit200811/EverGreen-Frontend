@@ -1,22 +1,39 @@
 import { Routes, Route } from "react-router-dom";
 import Layout from "../components/layout/Layout";
+import ProtectedRoute from "./ProtectedRoute";
+
+/* ========== AUTH ========== */
 import Login from "../pages/auth/Login";
+import Register from "../pages/auth/Register";
+import ForgotPassword from "../pages/auth/ForgotPassword";
+import ResetPassword from "../pages/auth/ResetPassword";
+
+/* ========== ADMIN ========== */
 import AdminDashboard from "../pages/dashboard/AdminDashboard";
 import AdminTickets from "../pages/admin/Tickets";
-import ProtectedRoute from "./ProtectedRoute";
-import CreateTicket from "../pages/customer/CreateTicket";
+import AdminAttendance from "../pages/admin/Attendance";
+
+/* ========== EMPLOYEE ========== */
 import Employees from "../pages/employee/Employees";
 import EmployeeTickets from "../pages/employee/MyTickets";
-import TicketDetail from "../pages/tickets/TicketDetail";
 import EmployeeAttendance from "../pages/employee/Attendance";
-import AdminAttendance from "../pages/admin/Attendance";
+
+/* ========== CUSTOMER ========== */
+import CustomerDashboard from "../pages/customer/CustomerDashboard";
+import CreateTicket  from "../pages/customer/CreateTicket";
+import TicketDetail from "../pages/tickets/TicketDetail";
+
 export default function AppRouter() {
   return (
     <Routes>
-      {/* Public */}
-      <Route path="/" element={<Login />} />
 
-      {/* ADMIN ROUTES */}
+      {/* ================= PUBLIC ROUTES ================= */}
+      <Route path="/" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password/:token" element={<ResetPassword />} />
+
+      {/* ================= ADMIN ROUTES ================= */}
       <Route element={<ProtectedRoute roles={["ADMIN"]} />}>
         <Route element={<Layout />}>
           <Route path="/dashboard" element={<AdminDashboard />} />
@@ -26,18 +43,20 @@ export default function AppRouter() {
         </Route>
       </Route>
 
-      {/* EMPLOYEE ROUTES */}
+      {/* ================= EMPLOYEE ROUTES ================= */}
       <Route element={<ProtectedRoute roles={["EMPLOYEE"]} />}>
         <Route element={<Layout />}>
           <Route path="/employee" element={<div>Employee Home</div>} />
-          <Route path="/my-tickets" element={<EmployeeTickets/>} />
-          <Route path="/employee-attendance" element={<EmployeeAttendance/>} />
+          <Route path="/my-tickets" element={<EmployeeTickets />} />
+          <Route path="/employee-attendance" element={<EmployeeAttendance />} />
         </Route>
       </Route>
 
-      <Route element={<ProtectedRoute allowedRoles={["CUSTOMER"]} />}>
+      {/* ================= CUSTOMER ROUTES ================= */}
+      <Route element={<ProtectedRoute roles={["CUSTOMER"]} />}>
         <Route element={<Layout />}>
-          <Route path="/tickets/create" element={<CreateTicket/>} />
+          <Route path="/customer" element={<CustomerDashboard />} />
+          <Route path="/tickets/create" element={<CreateTicket />} />
           <Route path="/tickets/:id" element={<TicketDetail />} />
         </Route>
       </Route>

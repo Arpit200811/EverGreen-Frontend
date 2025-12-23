@@ -34,9 +34,8 @@ export default function CreateTicket() {
       setLoading(false);
     }
   };
-
   return (
-    <div className="min-h-screen flex items-start sm:items-center justify-center px-4 sm:px-6">
+    <div id="tickets-create" className="min-h-screen flex items-start sm:items-center justify-center scroll-mt-20" >
       <div className="w-full max-w-md sm:max-w-xl bg-white p-4 sm:p-6 rounded-lg shadow mt-6 sm:mt-0">
         <h2 className="text-lg sm:text-2xl font-semibold text-emerald-700 mb-5 sm:mb-6 text-center sm:text-left">
           Create Service Ticket

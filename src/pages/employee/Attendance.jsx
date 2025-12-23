@@ -77,6 +77,7 @@ export default function EmployeeAttendance() {
           <table className="w-full min-w-[640px] text-xs sm:text-sm">
             <thead className="bg-gray-100">
               <tr>
+                <th className="p-3 text-left">ID</th>
                 <th className="p-3 text-left">Date</th>
                 <th className="p-3 text-left">Check In</th>
                 <th className="p-3 text-left">Check Out</th>
@@ -85,8 +86,9 @@ export default function EmployeeAttendance() {
               </tr>
             </thead>
             <tbody>
-              {records.map(r => (
+              {records.map((r,index) => (
                 <tr key={r._id} className="border-t">
+                  <td className="p-3 whitespace-nowrap">{index+1}</td>
                   <td className="p-3 whitespace-nowrap">{r.date}</td>
                   <td className="p-3 whitespace-nowrap">
                     {r.checkIn

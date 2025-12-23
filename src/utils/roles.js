@@ -1,21 +1,77 @@
+import {
+  LayoutDashboard,
+  Users,
+  Ticket,
+  CalendarCheck,
+  IndianRupee,
+  MapPin,
+  ClipboardList,
+  FileText,
+  PlusCircle,
+} from "lucide-react";
+
 export const sidebarMenu = {
   ADMIN: [
-    { label: "Dashboard", path: "/dashboard" },
-    { label: "Employees", path: "/add-employee" },
-    { label: "Tickets", path: "/tickets" },
-    { label: "Attendance", path: "/admin-attendance" },
-    { label: "Salary", path: "/salary" },
-    { label: "Live Map", path: "/live-map" },
+    {
+      label: "Dashboard",
+      path: "/dashboard",
+      icon: LayoutDashboard,
+    },
+    {
+      label: "Employees",
+      path: "/add-employee",
+      icon: Users,
+    },
+    {
+      label: "Tickets",
+      path: "/tickets",
+      icon: Ticket,
+    },
+    {
+      label: "Attendance",
+      path: "/admin-attendance",
+      icon: CalendarCheck,
+    },
+    {
+      label: "Salary",
+      path: "/salary",
+      icon: IndianRupee,
+    },
+    {
+      label: "Live Map",
+      path: "/live-map",
+      icon: MapPin,
+    },
   ],
 
   EMPLOYEE: [
-    { label: "My Tickets", path: "/my-tickets" },
-    { label: "Attendance", path: "/employee-attendance" },
-    { label: "Leave Applications", path: "/leaves" },
+    {
+      label: "My Tickets",
+      path: "/my-tickets",
+      icon: ClipboardList,
+    },
+    {
+      label: "Attendance",
+      path: "/employee-attendance",
+      icon: CalendarCheck,
+    },
+    {
+      label: "Leave Applications",
+      path: "/leaves",
+      icon: FileText,
+    },
   ],
 
   CUSTOMER: [
-    { label: "Create Ticket", path: "/tickets/create" },
-    { label: "My Tickets", path: "/my-tickets" },
+    {
+      label: "Create Ticket",
+      path: "/tickets/create",
+      icon: PlusCircle,
+    },
+    {
+      label: "My Tickets",
+      path: "/my-tickets",
+      icon: Ticket,
+    },
   ],
 };
