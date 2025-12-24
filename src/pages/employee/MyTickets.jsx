@@ -1,433 +1,260 @@
-// import { useEffect, useState } from 'react';
-// import API from '../../api/axios';
-
-// export default function EmployeeTickets() {
-//   const [tickets, setTickets] = useState([]);
-//   const [loading, setLoading] = useState(true);
-//   const [selected, setSelected] = useState(null);
-//   const [receipt, setReceipt] = useState(null);
-
-//   /* ---------------- LOAD TICKETS ---------------- */
-//   const loadTickets = async () => {
-//     setLoading(true);
-//     const res = await API.get('/tickets/my');
-//     setTickets(res.data);
-//     setLoading(false);
-//   };
-
-//   useEffect(() => {
-//     loadTickets();
-//   }, []);
-
-//   /* ---------------- START TICKET ---------------- */
-//   const startTicket = async (id) => {
-//     await API.put(`/tickets/${id}/start`);
-//     loadTickets();
-//   };
-
-//   /* ---------------- COMPLETE TICKET ---------------- */
-//   const completeTicket = async () => {
-//     await API.put(`/tickets/${selected._id}/complete`, {
-//       receiptImage: receipt
-//     });
-
-//     setSelected(null);
-//     setReceipt(null);
-//     loadTickets();
-//   };
-
-//   /* ---------------- FILE HANDLER ---------------- */
-//   const handleFile = (e) => {
-//     const file = e.target.files[0];
-//     const reader = new FileReader();
-
-//     reader.onloadend = () => {
-//       setReceipt(reader.result);
-//     };
-
-//     reader.readAsDataURL(file);
-//   };
-
-//   if (loading) return <p className="p-4">Loading...</p>;
-
-//   return (
-//     <div className="p-4 sm:p-6">
-//       <h1 className="text-lg sm:text-xl font-bold mb-4">My Tickets</h1>
-
-//       <div className="grid gap-4">
-//         {tickets.map(t => (
-//           <div
-//             key={t._id}
-//             className="border rounded p-4 shadow bg-white flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4"
-//           >
-//             <div>
-//               <p className="font-semibold">{t.deviceType}</p>
-//               <p className="text-sm text-gray-600 break-words">
-//                 {t.issueDescription}
-//               </p>
-//               <p className="text-xs mt-1">
-//                 Status:
-//                 <span className="ml-1 font-semibold text-blue-600">
-//                   {t.status}
-//                 </span>
-//               </p>
-//             </div>
-
-//             {/* ACTIONS */}
-//             <div className="flex gap-2 w-full sm:w-auto">
-//               {t.status === 'ASSIGNED' && (
-//                 <button
-//                   className="bg-blue-600 text-white px-4 py-1 rounded w-full sm:w-auto"
-//                   onClick={() => startTicket(t._id)}
-//                 >
-//                   Start
-//                 </button>
-//               )}
-
-//               {t.status === 'IN_PROGRESS' && (
-//                 <button
-//                   className="bg-green-600 text-white px-4 py-1 rounded w-full sm:w-auto"
-//                   onClick={() => setSelected(t)}
-//                 >
-//                   Complete
-//                 </button>
-//               )}
-
-//               {t.status === 'COMPLETED' && (
-//                 <span className="text-gray-400 text-sm self-center">
-//                   Done
-//                 </span>
-//               )}
-//             </div>
-//           </div>
-//         ))}
-//       </div>
-
-//       {/* ---------------- COMPLETE MODAL ---------------- */}
-//       {selected && (
-//         <div className="fixed inset-0 bg-black/40 flex items-center justify-center px-3 z-50">
-//           <div className="bg-white p-4 sm:p-6 rounded w-full max-w-sm">
-//             <h3 className="font-bold mb-4 text-lg">
-//               Complete Ticket
-//             </h3>
-
-//             <input
-//               type="file"
-//               accept="image/*"
-//               onChange={handleFile}
-//               className="mb-4 w-full text-sm"
-//             />
-
-//             <div className="flex flex-col sm:flex-row justify-end gap-2">
-//               <button
-//                 className="border px-4 py-2 rounded w-full sm:w-auto"
-//                 onClick={() => setSelected(null)}
-//               >
-//                 Cancel
-//               </button>
-
-//               <button
-//                 disabled={!receipt}
-//                 className="bg-green-600 text-white px-4 py-2 rounded disabled:opacity-50 w-full sm:w-auto"
-//                 onClick={completeTicket}
-//               >
-//                 Complete
-//               </button>
-//             </div>
-//           </div>
-//         </div>
-//       )}
-//     </div>
-//   );
-// }
-
 import { useEffect, useState } from "react";
-import {
-  Play,
-  CheckCircle,
-  Clock,
-  FileText,
-  X,
+import { 
+  Play, CheckCircle, Clock, FileText, X, Monitor, 
+  Smartphone, HardDrive, AlertCircle, UploadCloud, ChevronRight, ChevronLeft 
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import API from "../../api/axios";
 import { socket } from "../../utils/socket";
 
-const PAGE_SIZE = 5;
+const PAGE_SIZE = 6;
 
 export default function EmployeeTickets() {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
-
   const [selected, setSelected] = useState(null);
   const [receipt, setReceipt] = useState(null);
-
-  const [logs, setLogs] = useState([]);
-  const [showLogs, setShowLogs] = useState(false);
-
   const [page, setPage] = useState(1);
 
-  /* ---------------- LOAD TICKETS ---------------- */
   const loadTickets = async () => {
-    setLoading(true);
-    const res = await API.get("/tickets/my");
-    setTickets(res.data);
-    setLoading(false);
+    try {
+      setLoading(true);
+      const res = await API.get("/tickets/my");
+      setTickets(res.data);
+    } catch (err) {
+      console.error("Error loading tickets", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     loadTickets();
-  }, []);
-
-  /* ---------------- SOCKET AUTO REFRESH ---------------- */
-  useEffect(() => {
     socket.on("ticketUpdated", loadTickets);
     socket.on("ticketCancelled", loadTickets);
-    socket.on("ticketLog", loadTickets);
-
     return () => {
-      socket.off("ticketUpdated", loadTickets);
-      socket.off("ticketCancelled", loadTickets);
-      socket.off("ticketLog", loadTickets);
+      socket.off("ticketUpdated");
+      socket.off("ticketCancelled");
     };
   }, []);
 
-  /* ---------------- START ---------------- */
   const startTicket = async (id) => {
     await API.put(`/tickets/${id}/start`);
     loadTickets();
   };
 
-  /* ---------------- COMPLETE ---------------- */
   const completeTicket = async () => {
-    await API.put(`/tickets/${selected._id}/complete`, {
-      receiptImage: receipt,
-    });
-
+    await API.put(`/tickets/${selected._id}/complete`, { receiptImage: receipt });
     setSelected(null);
     setReceipt(null);
     loadTickets();
   };
 
-  /* ---------------- FILE ---------------- */
   const handleFile = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
     const reader = new FileReader();
     reader.onloadend = () => setReceipt(reader.result);
     reader.readAsDataURL(file);
   };
 
-  /* ---------------- LOAD LOGS ---------------- */
-  // const openLogs = async (ticketId) => {
-  //   const res = await API.get(`/tickets/${ticketId}/logs`);
-  //   setLogs(res.data);
-  //   setShowLogs(true);
-  // };
-
-  /* ---------------- PAGINATION ---------------- */
-  const start = (page - 1) * PAGE_SIZE;
-  const paginated = tickets.slice(start, start + PAGE_SIZE);
+  const paginated = tickets.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
   const totalPages = Math.ceil(tickets.length / PAGE_SIZE);
 
-  /* ---------------- STATUS BADGE ---------------- */
-  const StatusBadge = ({ status }) => {
-    const map = {
-      ASSIGNED: "bg-blue-100 text-blue-700",
-      IN_PROGRESS: "bg-yellow-100 text-yellow-700",
-      COMPLETED: "bg-green-100 text-green-700",
-      CANCELLED: "bg-red-100 text-red-700",
-    };
-    return (
-      <span
-        className={`px-3 py-1 rounded-full text-xs font-medium ${
-          map[status] || "bg-gray-100"
-        }`}
-      >
-        {status.replace("_", " ")}
-      </span>
-    );
+  // Helper: Device Icon
+  const getDeviceIcon = (type) => {
+    const t = type?.toLowerCase();
+    if (t?.includes('phone')) return <Smartphone size={18} />;
+    if (t?.includes('laptop') || t?.includes('pc')) return <Monitor size={18} />;
+    return <HardDrive size={18} />;
   };
 
-  if (loading) return <p className="p-4">Loading...</p>;
+  if (loading) return (
+    <div className="flex h-96 items-center justify-center">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-emerald-500"></div>
+    </div>
+  );
 
   return (
-    <div className="p-4 sm:p-6">
-      <h1 className="text-lg sm:text-xl font-bold mb-4">
-        My Tickets
-      </h1>
-
-      <div className="bg-white rounded-xl overflow-x-auto">
-        <table className="w-full min-w-[1100px] table-fixed">
-          <thead className="bg-gray-100 text-xs sm:text-sm text-gray-600">
-            <tr>
-              <th className="w-12 px-4 py-3">ID</th>
-              <th className="w-40 px-4 py-3">Device</th>
-              <th className="w-40 px-4 py-3">Model</th>
-              <th className="w-64 px-4 py-3">Issue</th>
-              <th className="w-36 px-4 py-3">Status</th>
-              <th className="w-44 px-4 py-3 text-right">Action</th>
-            </tr>
-          </thead>
-
-          <tbody className="text-xs sm:text-sm">
-            {paginated.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={6}
-                  className="px-4 py-10 text-center text-gray-500"
-                >
-                  No tickets found
-                </td>
-              </tr>
-            ) : (
-              paginated.map((t, index) => (
-                <tr
-                  key={t._id}
-                  className="hover:bg-gray-50"
-                >
-                  <td className="px-4 py-3">
-                    {start + index + 1}
-                  </td>
-
-                  <td className="px-4 py-3 font-medium">
-                    {t.deviceType}
-                  </td>
-
-                  <td className="px-4 py-3">
-                    {t.deviceModel || "—"}
-                  </td>
-
-                  <td
-                    className="px-4 py-3 truncate"
-                    title={t.issueDescription}
-                  >
-                    {t.issueDescription}
-                  </td>
-
-                  <td className="px-4 py-3">
-                    <StatusBadge status={t.status} />
-                  </td>
-
-                  <td className="px-4 py-3 text-right space-x-2">
-                    {t.status === "ASSIGNED" && (
-                      <button
-                        onClick={() => startTicket(t._id)}
-                        className="inline-flex items-center gap-1 px-3 py-1 rounded bg-blue-100 text-blue-700"
-                      >
-                        <Play size={14} /> Start
-                      </button>
-                    )}
-
-                    {t.status === "IN_PROGRESS" && (
-                      <button
-                        onClick={() => setSelected(t)}
-                        className="inline-flex items-center gap-1 px-3 py-1 rounded bg-green-100 text-green-700"
-                      >
-                        <CheckCircle size={14} /> Complete
-                      </button>
-                    )}
-
-                    {t.status === "COMPLETED" && (
-                      <div className="text-xs text-gray-500">
-                        <Clock size={12} className="inline mr-1" />
-                        Done on{" "}
-                        {new Date(t.endTime).toLocaleString()}
-                      </div>
-                    )}
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-
-        {/* PAGINATION */}
-        {totalPages > 1 && (
-          <div className="flex justify-end gap-2 p-4">
-            <button
-              disabled={page === 1}
-              onClick={() => setPage(page - 1)}
-              className="px-3 py-1 border rounded disabled:opacity-40"
-            >
-              Prev
-            </button>
-            <span className="text-sm">
-              Page {page} / {totalPages}
-            </span>
-            <button
-              disabled={page === totalPages}
-              onClick={() => setPage(page + 1)}
-              className="px-3 py-1 border rounded disabled:opacity-40"
-            >
-              Next
-            </button>
-          </div>
-        )}
+    <div className="p-4 lg:p-8 max-w-[1600px] mx-auto bg-[#f8fafc] min-h-screen">
+      
+      {/* --- HEADER --- */}
+      <div className="flex justify-between items-end mb-8">
+        <div>
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Active Assignments</h1>
+          <p className="text-slate-500 font-medium">Manage and track your assigned technical tickets</p>
+        </div>
+        <div className="bg-white px-4 py-2 rounded-2xl shadow-sm border border-slate-100 hidden md:block">
+          <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Total Active: </span>
+          <span className="text-emerald-600 font-black">{tickets.length}</span>
+        </div>
       </div>
 
-      {/* LOG MODAL */}
-      {showLogs && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-5 w-full max-w-md">
-            <div className="flex justify-between mb-4">
-              <h3 className="font-bold">Ticket Timeline</h3>
-              <button onClick={() => setShowLogs(false)}>
-                <X />
-              </button>
-            </div>
+      {/* --- TABLE CONTAINER --- */}
+      <div className="bg-white rounded-[2rem] shadow-xl shadow-slate-200/60 overflow-hidden border border-slate-100">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-slate-50/50 border-b border-slate-100">
+                <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.1em] text-slate-400">Device Detail</th>
+                <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.1em] text-slate-400">Issue Description</th>
+                <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.1em] text-slate-400">Status</th>
+                <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.1em] text-slate-400 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-50">
+              <AnimatePresence mode="popLayout">
+                {paginated.map((t) => (
+                  <motion.tr 
+                    layout
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    key={t._id} 
+                    className="hover:bg-slate-50/80 transition-colors group"
+                  >
+                    <td className="px-6 py-5">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center group-hover:bg-emerald-100 group-hover:text-emerald-600 transition-colors">
+                          {getDeviceIcon(t.deviceType)}
+                        </div>
+                        <div>
+                          <p className="font-bold text-slate-800 text-sm">{t.deviceType}</p>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{t.deviceModel || "Standard Model"}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-5">
+                      <p className="text-sm text-slate-600 max-w-xs truncate font-medium" title={t.issueDescription}>
+                        {t.issueDescription}
+                      </p>
+                    </td>
+                    <td className="px-6 py-5">
+                      <span className={`
+                        px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider
+                        ${t.status === 'ASSIGNED' ? 'bg-blue-50 text-blue-600' : ''}
+                        ${t.status === 'IN_PROGRESS' ? 'bg-amber-50 text-amber-600' : ''}
+                        ${t.status === 'COMPLETED' ? 'bg-emerald-50 text-emerald-600' : ''}
+                      `}>
+                        {t.status.replace('_', ' ')}
+                      </span>
+                    </td>
+                    <td className="px-6 py-5 text-right">
+                      {t.status === "ASSIGNED" && (
+                        <button
+                          onClick={() => startTicket(t._id)}
+                          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 text-white text-xs font-bold hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all active:scale-95"
+                        >
+                          <Play size={14} fill="currentColor" /> Start Work
+                        </button>
+                      )}
+                      {t.status === "IN_PROGRESS" && (
+                        <button
+                          onClick={() => setSelected(t)}
+                          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-700 shadow-lg shadow-emerald-200 transition-all active:scale-95"
+                        >
+                          <CheckCircle size={14} /> Mark Done
+                        </button>
+                      )}
+                      {t.status === "COMPLETED" && (
+                        <div className="flex items-center justify-end gap-2 text-slate-400 font-bold text-[10px] uppercase">
+                          <Clock size={14} /> {new Date(t.endTime).toLocaleDateString()}
+                        </div>
+                      )}
+                    </td>
+                  </motion.tr>
+                ))}
+              </AnimatePresence>
+            </tbody>
+          </table>
+        </div>
 
-            <div className="space-y-3 max-h-80 overflow-y-auto">
-              {logs.map((l) => (
-                <div
-                  key={l._id}
-                  className="border-l-2 border-emerald-500 pl-3"
-                >
-                  <p className="text-sm">{l.message}</p>
-                  <p className="text-xs text-gray-500">
-                    {new Date(l.createdAt).toLocaleString()}
-                  </p>
-                </div>
-              ))}
-            </div>
+        {/* PAGINATION */}
+        <div className="p-6 bg-slate-50/50 flex items-center justify-between border-t border-slate-100">
+          <p className="text-xs font-bold text-slate-500">
+            Showing <span className="text-slate-900">{paginated.length}</span> of {tickets.length} tickets
+          </p>
+          <div className="flex gap-2">
+            <button 
+              disabled={page === 1}
+              onClick={() => setPage(page-1)}
+              className="p-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-30 transition-all"
+            >
+              <ChevronLeft size={18} />
+            </button>
+            <button 
+              disabled={page === totalPages}
+              onClick={() => setPage(page+1)}
+              className="p-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-30 transition-all"
+            >
+              <ChevronRight size={18} />
+            </button>
           </div>
         </div>
-      )}
+      </div>
 
-      {/* COMPLETE MODAL */}
-      {selected && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-5 w-full max-w-sm">
-            <h3 className="font-bold mb-4">
-              Complete Ticket
-            </h3>
-
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleFile}
-              className="mb-4 w-full text-sm"
+      {/* --- COMPLETION MODAL --- */}
+      <AnimatePresence>
+        {selected && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+              onClick={() => setSelected(null)}
             />
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="relative bg-white rounded-[2.5rem] p-8 w-full max-w-md shadow-2xl overflow-hidden"
+            >
+              <div className="flex justify-between items-start mb-6">
+                <div>
+                  <h3 className="text-2xl font-black text-slate-900 tracking-tight">Final Step</h3>
+                  <p className="text-slate-500 text-sm font-medium">Please upload service receipt or photo</p>
+                </div>
+                <button onClick={() => setSelected(null)} className="p-2 bg-slate-100 rounded-full hover:bg-slate-200 transition-colors">
+                  <X size={20} />
+                </button>
+              </div>
 
-            <div className="flex justify-end gap-2">
-              <button
-                onClick={() => setSelected(null)}
-                className="border px-4 py-2 rounded"
-              >
-                Cancel
-              </button>
+              <div className="relative group border-2 border-dashed border-slate-200 rounded-3xl p-8 transition-all hover:border-emerald-500 hover:bg-emerald-50/30">
+                <input type="file" accept="image/*" onChange={handleFile} className="absolute inset-0 opacity-0 cursor-pointer" />
+                <div className="text-center">
+                  {receipt ? (
+                    <div className="flex flex-col items-center">
+                      <div className="w-16 h-16 bg-emerald-100 rounded-2xl flex items-center justify-center text-emerald-600 mb-2">
+                        <CheckCircle size={32} />
+                      </div>
+                      <p className="text-sm font-bold text-slate-700 uppercase tracking-tighter">Photo Attached!</p>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center">
+                      <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-400 mb-2 group-hover:scale-110 transition-transform">
+                        <UploadCloud size={32} />
+                      </div>
+                      <p className="text-sm font-bold text-slate-400">Tap to upload or drop image</p>
+                    </div>
+                  )}
+                </div>
+              </div>
 
-              <button
-                disabled={!receipt}
-                onClick={completeTicket}
-                className="bg-green-600 text-white px-4 py-2 rounded disabled:opacity-50"
-              >
-                Complete
-              </button>
-            </div>
+              <div className="grid grid-cols-2 gap-4 mt-8">
+                <button onClick={() => setSelected(null)} className="px-6 py-4 rounded-2xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-all">
+                  Cancel
+                </button>
+                <button 
+                  disabled={!receipt}
+                  onClick={completeTicket}
+                  className="px-6 py-4 rounded-2xl font-bold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-30 shadow-xl shadow-emerald-100 transition-all"
+                >
+                  Finish Ticket
+                </button>
+              </div>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
     </div>
   );
 }

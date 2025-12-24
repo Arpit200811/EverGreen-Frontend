@@ -7,6 +7,7 @@ import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
 import ForgotPassword from "../pages/auth/ForgotPassword";
 import ResetPassword from "../pages/auth/ResetPassword";
+import NotFound from "../pages/auth/PageNotFound";
 
 /* ========== ADMIN ========== */
 import AdminDashboard from "../pages/dashboard/AdminDashboard";
@@ -17,6 +18,8 @@ import AdminAttendance from "../pages/admin/Attendance";
 import Employees from "../pages/employee/Employees";
 import EmployeeTickets from "../pages/employee/MyTickets";
 import EmployeeAttendance from "../pages/employee/Attendance";
+import EmployeeDashboard from "../pages/employee/EmployeeDashbord";
+
 
 /* ========== CUSTOMER ========== */
 import CustomerDashboard from "../pages/customer/CustomerDashboard";
@@ -29,6 +32,7 @@ export default function AppRouter() {
 
       {/* ================= PUBLIC ROUTES ================= */}
       <Route path="/" element={<Login />} />
+      <Route path="*" element={<NotFound/>} />
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password/:token" element={<ResetPassword />} />
@@ -46,7 +50,7 @@ export default function AppRouter() {
       {/* ================= EMPLOYEE ROUTES ================= */}
       <Route element={<ProtectedRoute roles={["EMPLOYEE"]} />}>
         <Route element={<Layout />}>
-          <Route path="/employee" element={<div>Employee Home</div>} />
+          <Route path="/employee" element={<EmployeeDashboard />} />
           <Route path="/my-tickets" element={<EmployeeTickets />} />
           <Route path="/employee-attendance" element={<EmployeeAttendance />} />
         </Route>

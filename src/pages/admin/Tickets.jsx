@@ -31,6 +31,7 @@ export default function AdminTickets() {
           tickets={tickets}
           loading={loading}
           onAssignClick={setSelectedTicket}
+          refreshTickets={loadTickets}
         />
       </div>
 

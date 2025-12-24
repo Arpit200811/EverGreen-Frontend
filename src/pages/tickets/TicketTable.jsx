@@ -1,9 +1,24 @@
 import { useState } from "react";
 import TicketStatusBadge from "./TicketStatusBadge";
-import { UserPlus, Plus, Edit2, Trash2, X, Download } from "lucide-react";
+import {
+  UserPlus,
+  Plus,
+  Edit3,
+  Trash2,
+  X,
+  Download,
+  Search,
+  Filter,
+  Smartphone,
+  User,
+  IndianRupee,
+  AlertCircle,
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { ClipLoader } from "react-spinners";
 import { useAuth } from "../../context/AuthContext";
 import API from "../../api/axios";
+import { BASE_URL } from "../../api/axios";
 
 export default function TicketTable({
   tickets = [],
@@ -16,7 +31,7 @@ export default function TicketTable({
   const [editingTicket, setEditingTicket] = useState(null);
   const [deletingTicket, setDeletingTicket] = useState(null);
   const [saving, setSaving] = useState(false);
-  
+  const [searchTerm, setSearchTerm] = useState("");
 
   const [form, setForm] = useState({
     customerName: "",
@@ -27,7 +42,12 @@ export default function TicketTable({
     status: "OPEN",
   });
 
-  /* ================= MODAL HANDLERS ================= */
+  const filteredTickets = tickets.filter(
+    (t) =>
+      t.customer?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      t.deviceType?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   const openCreate = () => {
     setEditingTicket(null);
     setForm({
@@ -54,24 +74,14 @@ export default function TicketTable({
     setShowModal(true);
   };
 
-  const closeModal = () => {
-    setShowModal(false);
-    setEditingTicket(null);
-  };
-
-  /* ================= SAVE ================= */
   const handleSave = async () => {
     try {
       setSaving(true);
-
-      if (editingTicket) {
-        await API.put(`/tickets/${editingTicket._id}`, form);
-      } else {
-        await API.post("/tickets", form);
-      }
-
-      closeModal();
-      refreshTickets?.(); // 🔥 instant refresh
+      editingTicket
+        ? await API.put(`/tickets/${editingTicket._id}`, form)
+        : await API.post("/tickets", form);
+      setShowModal(false);
+      refreshTickets?.();
     } catch (err) {
       console.error(err);
     } finally {
@@ -79,247 +89,364 @@ export default function TicketTable({
     }
   };
 
-  /* ================= DELETE ================= */
   const handleDelete = async () => {
     try {
       await API.delete(`/tickets/${deletingTicket}`);
       setDeletingTicket(null);
-      refreshTickets?.(); // 🔥 instant refresh
+      refreshTickets?.();
     } catch (err) {
       console.error(err);
     }
   };
-  if (loading) {
+
+  if (loading)
     return (
-      <div className="flex justify-center items-center h-56">
-        <ClipLoader color="#059669" size={40} />
+      <div className="flex flex-col items-center justify-center h-64 gap-4">
+        <ClipLoader color="#10b981" size={40} />
+        <p className="text-slate-400 font-bold text-xs uppercase tracking-widest">
+          Syncing Records...
+        </p>
       </div>
     );
-  }
+
   return (
-    <div className="bg-white rounded-xl overflow-x-auto">
-      {/* HEADER */}
-      {user?.role === "ADMIN" && (
-        <div className="flex justify-end p-4">
-          <button
-            onClick={openCreate}
-            className="bg-emerald-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-emerald-700"
-          >
-            <Plus size={16} /> Create Ticket
-          </button>
+    <div className="space-y-4">
+      {/* --- ACTION BAR --- */}
+      <div className="flex flex-col md:flex-row gap-4 justify-between items-center bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+        <div className="relative w-full md:w-96">
+          <Search
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+            size={18}
+          />
+          <input
+            type="text"
+            placeholder="Search by customer or device..."
+            className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border-none rounded-xl text-sm focus:ring-2 focus:ring-emerald-500/20 transition-all"
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
         </div>
-      )}
 
-      <table className="w-full min-w-[1100px]">
-        <thead className="bg-gray-100 text-xs sm:text-sm text-gray-600">
-          <tr>
-            <th className="px-4 py-3 text-left">Id</th>
-            <th className="px-4 py-3">Customer</th>
-            <th className="px-4 py-3">Device</th>
-            <th className="px-4 py-3">Model</th>
-            <th className="px-4 py-3">Status</th>
-            <th className="px-4 py-3">Issue</th>
-            <th className="px-4 py-3">Engineer</th>
-            <th className="px-4 py-3">Cost (₹)</th>
-            <th className="px-4 py-3 text-right">Actions</th>
-          </tr>
-        </thead>
+        <div className="flex gap-2 w-full md:w-auto">
+          <button className="flex-1 md:flex-none p-2.5 bg-slate-50 text-slate-600 rounded-xl hover:bg-slate-100 transition-colors">
+            <Filter size={18} />
+          </button>
+          {user?.role === "ADMIN" && (
+            <button
+              onClick={openCreate}
+              className="flex-1 md:flex-none bg-slate-900 text-white px-6 py-2.5 rounded-xl flex items-center justify-center gap-2 hover:bg-emerald-600 transition-all font-bold text-sm shadow-lg shadow-slate-200"
+            >
+              <Plus size={18} /> Create Ticket
+            </button>
+          )}
+        </div>
+      </div>
 
-        <tbody className="text-xs sm:text-sm">
-          {tickets.length === 0 ? (
-            <tr>
-              <td colSpan={9} className="px-4 py-10 text-center text-gray-500">
-                No tickets found
-              </td>
-            </tr>
-          ) : (
-            tickets.map((t, index) => {
-              const canAssign =
-                user?.role === "ADMIN" &&
-                t.status === "OPEN" &&
-                !t.assignedEngineer;
-
-              return (
-                <tr key={t._id} className="hover:bg-gray-50 transition">
-                  <td className="px-4 py-3">{index + 1}</td>
-                  <td className="px-4 py-3 font-medium">
-                    {t.customer?.name || "—"}
-                  </td>
-                  <td className="px-4 py-3">{t.deviceType}</td>
-                  <td className="px-4 py-3">{t.deviceModel || "—"}</td>
-                  <td className="px-4 py-3">
-                    <TicketStatusBadge status={t.status} />
-                  </td>
-                  <td
-                    className="px-4 py-3 max-w-xs truncate"
-                    title={t.issueDescription}
-                  >
-                    {t.issueDescription}
-                  </td>
-                  <td className="px-4 py-3">
-                    {t.assignedEngineer?.name || (
-                      <span className="text-gray-400">Not Assigned</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    {t.estimatedCost ? `₹ ${t.estimatedCost}` : "—"}
-                  </td>
-
-                  <td className="px-4 py-3">
-                    <div className="flex justify-end gap-2">
-                      {user?.role === "ADMIN" &&
-                        t.status === "COMPLETED" &&
-                        t.receiptImage && (
-                          <a
-                            href={t.receiptImage}
-                            download={`receipt-${t._id}.png`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="p-2 rounded bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
-                            title="Download Receipt"
-                          >
-                            <Download size={14} />
-                          </a>
-                        )}
-                      {canAssign && (
-                        <button
-                          onClick={() => onAssignClick(t)}
-                          className="p-2 rounded bg-emerald-100 text-emerald-700"
-                        >
-                          <UserPlus size={14} />
-                        </button>
-                      )}
-
-                      {user?.role === "ADMIN" && (
-                        <>
-                          <button
-                            onClick={() => openEdit(t)}
-                            className="p-2 rounded bg-blue-100 text-blue-700"
-                          >
-                            <Edit2 size={14} />
-                          </button>
-                          <button
-                            onClick={() => setDeletingTicket(t._id)}
-                            className="p-2 rounded bg-red-100 text-red-700"
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        </>
-                      )}
+      {/* --- TABLE --- */}
+      <div className="bg-white rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/50 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead>
+              <tr className="bg-slate-50/50 border-b border-slate-100">
+                <th className="px-6 py-5 text-[10px] font-black uppercase text-slate-400 tracking-widest text-center">
+                  ID
+                </th>
+                <th className="px-6 py-5 text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                  Client & Device
+                </th>
+                <th className="px-6 py-5 text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                  Status
+                </th>
+                <th className="px-6 py-5 text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                  Technician
+                </th>
+                <th className="px-6 py-5 text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                  Estimate
+                </th>
+                <th className="px-6 py-5 text-[10px] font-black uppercase text-slate-400 tracking-widest text-right">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-50">
+              {filteredTickets.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-20 text-center">
+                    <div className="flex flex-col items-center gap-2">
+                      <AlertCircle className="text-slate-200" size={48} />
+                      <p className="text-slate-400 font-medium">
+                        No tickets found matching your criteria
+                      </p>
                     </div>
                   </td>
                 </tr>
-              );
-            })
-          )}
-        </tbody>
-      </table>
+              ) : (
+                filteredTickets.map((t, index) => (
+                  <tr
+                    key={t._id}
+                    className="hover:bg-slate-50/50 transition-colors group"
+                  >
+                    <td className="px-6 py-5 text-center font-bold text-slate-300">
+                      #TKT{index + 1}
+                    </td>
+                    <td className="px-6 py-5">
+                      <div className="flex flex-col">
+                        <span className="font-black text-slate-800 text-sm flex items-center gap-1">
+                          <User size={14} className="text-slate-400" />{" "}
+                          {t.customer?.name || "Guest User"}
+                        </span>
+                        <span className="text-[11px] font-bold text-emerald-600 flex items-center gap-1 mt-0.5">
+                          <Smartphone size={12} /> {t.deviceType} •{" "}
+                          {t.deviceModel || "Generic"}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-5">
+                      <TicketStatusBadge status={t.status} />
+                    </td>
+                    <td className="px-6 py-5">
+                      {t.assignedEngineer ? (
+                        <div className="flex flex-col">
+                          <span className="text-xs font-bold text-slate-700">
+                            {t.assignedEngineer.name}
+                          </span>
+                          {user?.role === "CUSTOMER" && (
+                            <span className="text-[10px] text-slate-400 font-medium">
+                              {t.assignedEngineer.mobile}
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-[10px] font-black uppercase text-slate-300 tracking-tighter">
+                          Waiting for Assign
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-6 py-5">
+                      <span className="font-black text-slate-700 flex items-center gap-0.5">
+                        <IndianRupee size={12} className="text-slate-400" />
+                        {t.estimatedCost || "0.00"}
+                      </span>
+                    </td>
+                    <td className="px-6 py-5">
+                      <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {user?.role === "ADMIN" &&
+                          t.status === "OPEN" &&
+                          !t.assignedEngineer && (
+                            <ActionButton
+                              icon={<UserPlus size={14} />}
+                              color="bg-emerald-50 text-emerald-600"
+                              onClick={() => onAssignClick(t)}
+                              tip="Assign Now"
+                            />
+                          )}
+                        {user?.role === "ADMIN" &&
+                          t.status === "COMPLETED" &&
+                          t.receiptImage && (
+                            <a
+                              href={t.receiptImage} // Agar URL relative hai toh BASE_URL zaroori hai
+                              download={`receipt-${t._id}.png`} // File name specify karein
+                              target="_blank"
+                              rel="noreferrer"
+                              className="p-2 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-900 hover:text-white transition-all shadow-sm"
+                              title="Download Receipt"
+                            >
+                              <Download size={14} />
+                            </a>
+                          )}
+                        {user?.role === "ADMIN" && (
+                          <>
+                            <ActionButton
+                              icon={<Edit3 size={14} />}
+                              color="bg-blue-50 text-blue-600"
+                              onClick={() => openEdit(t)}
+                              tip="Edit"
+                            />
+                            <ActionButton
+                              icon={<Trash2 size={14} />}
+                              color="bg-rose-50 text-rose-600"
+                              onClick={() => setDeletingTicket(t._id)}
+                              tip="Delete"
+                            />
+                          </>
+                        )}
+                        {user?.role === "CUSTOMER" && t.status === "OPEN" && (
+                          <ActionButton
+                            icon={<X size={14} />}
+                            color="bg-rose-50 text-rose-600"
+                            onClick={() => setDeletingTicket(t._id)}
+                            tip="Cancel"
+                          />
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
 
-      {/* MODAL */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl w-full max-w-lg mx-4">
-            <div className="bg-emerald-600 p-4 flex justify-between">
-              <h3 className="text-white font-semibold">
-                {editingTicket ? "Edit Ticket" : "Create Ticket"}
-              </h3>
-              <button onClick={closeModal}>
-                <X className="text-white" />
-              </button>
-            </div>
-
-            <div className="p-4 space-y-3">
+      {/* --- MODALS --- */}
+      <AnimatePresence>
+        {showModal && (
+          <Modal
+            title={editingTicket ? "Edit Ticket Detail" : "New Service Request"}
+            onClose={() => setShowModal(false)}
+            onSave={handleSave}
+            saving={saving}
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Input
-                label="Customer Name"
+                label="Client Name"
                 value={form.customerName}
                 onChange={(v) => setForm({ ...form, customerName: v })}
+                placeholder="e.g. John Doe"
               />
               <Input
-                label="Device Type"
+                label="Device Category"
                 value={form.deviceType}
                 onChange={(v) => setForm({ ...form, deviceType: v })}
+                placeholder="e.g. Laptop"
               />
               <Input
-                label="Device Model"
+                label="Model Name"
                 value={form.deviceModel}
                 onChange={(v) => setForm({ ...form, deviceModel: v })}
-              />
-              <Textarea
-                label="Issue Description"
-                value={form.issueDescription}
-                onChange={(v) => setForm({ ...form, issueDescription: v })}
+                placeholder="e.g. MacBook Pro M1"
               />
               <Input
-                label="Estimated Cost"
+                label="Estimate Cost (₹)"
                 value={form.estimatedCost}
                 onChange={(v) => setForm({ ...form, estimatedCost: v })}
+                placeholder="500"
               />
+              <div className="md:col-span-2">
+                <Textarea
+                  label="Describe the Problem"
+                  value={form.issueDescription}
+                  onChange={(v) => setForm({ ...form, issueDescription: v })}
+                  placeholder="Provide as much detail as possible..."
+                />
+              </div>
             </div>
+          </Modal>
+        )}
+      </AnimatePresence>
 
-            <div className="p-4 flex gap-3">
-              <button
-                onClick={closeModal}
-                className="border rounded px-4 py-2 flex-1"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSave}
-                className="bg-emerald-600 text-white rounded px-4 py-2 flex-1"
-              >
-                {saving ? "Saving..." : "Save"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* DELETE */}
+      {/* DELETE CONFIRMATION */}
       {deletingTicket && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 w-full max-w-sm">
-            <p className="mb-4 font-medium">Delete this ticket?</p>
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
+          <motion.div
+            initial={{ scale: 0.9 }}
+            animate={{ scale: 1 }}
+            className="bg-white rounded-[2rem] p-8 w-full max-w-sm text-center"
+          >
+            <div className="w-16 h-16 bg-rose-50 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-4">
+              <AlertCircle size={32} />
+            </div>
+            <h3 className="text-xl font-black text-slate-900 mb-2">
+              Are you sure?
+            </h3>
+            <p className="text-slate-500 text-sm mb-8">
+              This action cannot be undone. All data related to this ticket will
+              be lost.
+            </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setDeletingTicket(null)}
-                className="border rounded px-4 py-2 flex-1"
+                className="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl transition-all hover:bg-slate-200"
               >
-                Cancel
+                Keep It
               </button>
               <button
                 onClick={handleDelete}
-                className="bg-red-600 text-white rounded px-4 py-2 flex-1"
+                className="flex-1 py-3 bg-rose-600 text-white font-bold rounded-xl transition-all hover:bg-rose-700 shadow-lg shadow-rose-200"
               >
                 Delete
               </button>
             </div>
-          </div>
+          </motion.div>
         </div>
       )}
     </div>
   );
 }
 
-/* ===== INPUTS ===== */
-const Input = ({ label, value, onChange }) => (
-  <div>
-    <label className="text-sm text-gray-600">{label}</label>
+/* --- REUSABLE SUB-COMPONENTS --- */
+
+const ActionButton = ({ icon, color, onClick, tip }) => (
+  <button
+    onClick={onClick}
+    title={tip}
+    className={`p-2 rounded-xl transition-all hover:scale-110 active:scale-90 shadow-sm ${color}`}
+  >
+    {icon}
+  </button>
+);
+
+const Modal = ({ title, children, onClose, onSave, saving }) => (
+  <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-md flex items-center justify-center z-[100] p-4">
+    <motion.div
+      initial={{ y: 50, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      className="bg-white rounded-[2.5rem] w-full max-w-2xl overflow-hidden shadow-2xl"
+    >
+      <div className="px-8 py-6 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
+        <h3 className="text-xl font-black text-slate-800 tracking-tight">
+          {title}
+        </h3>
+        <button
+          onClick={onClose}
+          className="p-2 hover:bg-slate-200 rounded-full transition-colors"
+        >
+          <X size={20} />
+        </button>
+      </div>
+      <div className="p-8">{children}</div>
+      <div className="px-8 py-6 bg-slate-50 border-t border-slate-100 flex gap-4">
+        <button
+          onClick={onClose}
+          className="flex-1 py-3 font-bold text-slate-500 hover:text-slate-800 transition-colors"
+        >
+          Discard
+        </button>
+        <button
+          onClick={onSave}
+          className="flex-[2] py-4 bg-emerald-600 text-white font-black rounded-2xl shadow-xl shadow-emerald-100 hover:bg-emerald-700 transition-all active:scale-95 disabled:opacity-50"
+        >
+          {saving ? "Processing..." : "Confirm & Save"}
+        </button>
+      </div>
+    </motion.div>
+  </div>
+);
+
+const Input = ({ label, value, onChange, placeholder }) => (
+  <div className="space-y-1.5">
+    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+      {label}
+    </label>
     <input
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="w-full border rounded px-3 py-2"
+      placeholder={placeholder}
+      className="w-full bg-slate-50 border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-emerald-500/20 transition-all font-medium"
     />
   </div>
 );
 
-const Textarea = ({ label, value, onChange }) => (
-  <div>
-    <label className="text-sm text-gray-600">{label}</label>
+const Textarea = ({ label, value, onChange, placeholder }) => (
+  <div className="space-y-1.5">
+    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+      {label}
+    </label>
     <textarea
-      rows={3}
+      rows={4}
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="w-full border rounded px-3 py-2"
+      placeholder={placeholder}
+      className="w-full bg-slate-50 border-none rounded-2xl px-4 py-3 text-sm focus:ring-2 focus:ring-emerald-500/20 transition-all font-medium"
     />
   </div>
 );

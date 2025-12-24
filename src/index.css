@@ -1,1 +1,16 @@
  @import "tailwindcss";
+ 
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden; /* Side scroll rokne ke liye */
+  width: 100%;
+}
+
+#root {
+  width: 100%;
+}
+/* *{
+   margin: 0;
+  padding: 0; 
+} */
