@@ -33,8 +33,13 @@ export const sidebarMenu = {
       icon: CalendarCheck,
     },
     {
+      label: "Leave Applications",
+      path: "/leaves",
+      icon: FileText,
+    },
+    {
       label: "Salary",
-      path: "/salary",
+      path: "/salary-management",
       icon: IndianRupee,
     },
     {

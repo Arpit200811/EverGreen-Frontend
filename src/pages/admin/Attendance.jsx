@@ -5,7 +5,7 @@ import {
   Calendar, Clock, Download, Search, Filter, 
   ArrowRightLeft, UserCheck, UserX, Timer 
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { BASE_URL } from "../../api/axios";
 
 export default function AdminAttendance() {
   const [records, setRecords] = useState([]);
@@ -125,61 +125,93 @@ export default function AdminAttendance() {
                 <th className="px-8 py-5 text-[10px] font-black uppercase text-slate-400 tracking-widest">Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-50">
-              {filteredRecords.length > 0 ? (
-                filteredRecords.map((r) => (
-                  <tr key={r._id} className="hover:bg-slate-50/50 transition-colors group">
-                    <td className="px-8 py-5">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
-                          {r.employee?.name?.charAt(0) || "?"}
-                        </div>
-                        <span className="font-black text-slate-800 text-sm tracking-tight">
-                          {r.employee?.name || "Unknown User"}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-8 py-5">
-                      <div className="flex flex-col gap-1">
-                        <span className="text-xs font-bold text-slate-500 flex items-center gap-1">
-                           <Calendar size={12} /> {r.date}
-                        </span>
-                        <div className="flex items-center gap-2 text-[11px] font-black text-slate-700">
-                          <span className="text-emerald-600">{r.checkIn ? formatTime(r.checkIn) : "—"}</span>
-                          <ArrowRightLeft size={10} className="text-slate-300" />
-                          <span className="text-rose-600">{r.checkOut ? formatTime(r.checkOut) : "Active"}</span>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-8 py-5 text-center">
-                      <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 rounded-lg text-xs font-black text-slate-600">
-                        <Timer size={14} className="text-slate-400" />
-                        {r.workingHours ? `${r.workingHours} hrs` : "Running"}
-                      </div>
-                    </td>
-                    <td className="px-8 py-5">
-                      <span className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center w-fit gap-1.5 ${
-                        r.status === 'PRESENT' 
-                          ? 'bg-emerald-50 text-emerald-600' 
-                          : 'bg-amber-50 text-amber-600'
-                      }`}>
-                        {r.status === 'PRESENT' ? <UserCheck size={12} /> : <UserX size={12} />}
-                        {r.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))
+           <tbody className="divide-y divide-slate-50">
+  {filteredRecords.length > 0 ? (
+    filteredRecords.map((r) => (
+      <tr key={r._id} className="hover:bg-slate-50/50 transition-colors group">
+        {/* --- EMPLOYEE NAME & AVATAR --- */}
+        <td className="px-8 py-5">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center overflow-hidden shrink-0">
+              {r.employee?.profileImage ? (
+                <img 
+                  src={`${BASE_URL}${r.employee.profileImage}`} 
+                  className="w-full h-full object-cover" 
+                  alt={r.employee?.name} 
+                />
               ) : (
-                <tr>
-                  <td colSpan={4} className="px-8 py-20 text-center">
-                    <div className="flex flex-col items-center gap-3">
-                      <Clock className="text-slate-200" size={48} />
-                      <p className="text-slate-400 font-bold">No records found for this selection</p>
-                    </div>
-                  </td>
-                </tr>
+                <span className="font-black text-emerald-600 text-sm uppercase">
+                  {r.employee?.name?.charAt(0) || "?"}
+                </span>
               )}
-            </tbody>
+            </div>
+            <div className="flex flex-col">
+              <span className="font-black text-slate-800 text-sm tracking-tight leading-none mb-1">
+                {r.employee?.name || "Unknown User"}
+              </span>
+              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                ID: {r.employee?._id?.slice(-6) || "N/A"}
+              </span>
+            </div>
+          </div>
+        </td>
+
+        {/* --- DATE & TIME SLOTS --- */}
+        <td className="px-8 py-5">
+          <div className="flex flex-col gap-1">
+            <span className="text-[10px] font-black text-slate-400 uppercase flex items-center gap-1">
+              <Calendar size={12} className="text-slate-300" /> {r.date}
+            </span>
+            <div className="flex items-center gap-2 text-[11px] font-black">
+              <span className="text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">
+                {r.checkIn ? formatTime(r.checkIn) : "—"}
+              </span>
+              <ArrowRightLeft size={10} className="text-slate-300" />
+              <span className={r.checkOut ? "text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded" : "text-amber-500 italic"}>
+                {r.checkOut ? formatTime(r.checkOut) : "Active Now"}
+              </span>
+            </div>
+          </div>
+        </td>
+
+        {/* --- WORKING HOURS --- */}
+        <td className="px-8 py-5 text-center">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 rounded-xl text-[11px] font-black text-slate-600 border border-slate-200/50">
+            <Timer size={14} className="text-slate-400" />
+            {r.workingHours ? `${r.workingHours} hrs` : "Running"}
+          </div>
+        </td>
+
+        {/* --- STATUS BADGE --- */}
+        <td className="px-8 py-5">
+          <span className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center w-fit gap-1.5 shadow-sm border ${
+            r.status === 'PRESENT' 
+              ? 'bg-emerald-50 text-emerald-600 border-emerald-100' 
+              : 'bg-amber-50 text-amber-600 border-amber-100'
+          }`}>
+            {r.status === 'PRESENT' ? <UserCheck size={12} /> : <UserX size={12} />}
+            {r.status || "N/A"}
+          </span>
+        </td>
+      </tr>
+    ))
+  ) : (
+    /* --- EMPTY STATE --- */
+    <tr>
+      <td colSpan={4} className="px-8 py-24 text-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center border-4 border-white shadow-inner">
+            <Clock className="text-slate-200" size={40} />
+          </div>
+          <div>
+            <p className="text-slate-800 font-black text-lg">No Attendance Found</p>
+            <p className="text-slate-400 text-sm font-medium">Try changing your filters or month selection.</p>
+          </div>
+        </div>
+      </td>
+    </tr>
+  )}
+</tbody>
           </table>
         </div>
       </div>

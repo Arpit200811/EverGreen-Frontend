@@ -13,12 +13,14 @@ import NotFound from "../pages/auth/PageNotFound";
 import AdminDashboard from "../pages/dashboard/AdminDashboard";
 import AdminTickets from "../pages/admin/Tickets";
 import AdminAttendance from "../pages/admin/Attendance";
+import SalaryManagement from "../pages/employee/Salary";
 
 /* ========== EMPLOYEE ========== */
 import Employees from "../pages/employee/Employees";
 import EmployeeTickets from "../pages/employee/MyTickets";
 import EmployeeAttendance from "../pages/employee/Attendance";
 import EmployeeDashboard from "../pages/employee/EmployeeDashbord";
+import LeaveManagement from "../pages/employee/Leaves"
 
 
 /* ========== CUSTOMER ========== */
@@ -44,6 +46,7 @@ export default function AppRouter() {
           <Route path="/tickets" element={<AdminTickets />} />
           <Route path="/add-employee" element={<Employees />} />
           <Route path="/admin-attendance" element={<AdminAttendance />} />
+          <Route path="/salary-management" element={<SalaryManagement />} />
         </Route>
       </Route>
 
@@ -53,6 +56,7 @@ export default function AppRouter() {
           <Route path="/employee" element={<EmployeeDashboard />} />
           <Route path="/my-tickets" element={<EmployeeTickets />} />
           <Route path="/employee-attendance" element={<EmployeeAttendance />} />
+          <Route path="/leaves" element={<LeaveManagement />} />
         </Route>
       </Route>
 
