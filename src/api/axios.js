@@ -1,8 +1,8 @@
 import axios from "axios";
 
 const API = axios.create({
-  // baseURL: "https://evergreen-backend-kgck.onrender.com",
-  baseURL: "http://localhost:5000",
+  baseURL: "https://evergreen-backend-kgck.onrender.com",
+  // baseURL: "http://localhost:5000",
 });
 
 API.interceptors.request.use((config) => {
@@ -13,8 +13,8 @@ API.interceptors.request.use((config) => {
   return config;
 });
 
-export const BASE_URL = "http://localhost:5000";
-// export const BASE_URL = "https://evergreen-backend-kgck.onrender.com";
+// export const BASE_URL = "http://localhost:5000";
+export const BASE_URL = "https://evergreen-backend-kgck.onrender.com";
 
 export default API;
 
