@@ -250,7 +250,7 @@ export default function Employees() {
                       </span>
                     </td>
                     <td className="px-8 py-5">
-                      <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex justify-end gap-2  transition-opacity">
                         <button onClick={() => handleEdit(emp)} className="p-2.5 rounded-xl bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all">
                           <Edit3 size={16} />
                         </button>
