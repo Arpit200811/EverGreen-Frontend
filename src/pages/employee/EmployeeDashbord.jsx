@@ -1,24 +1,80 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { 
-  CheckCircle, 
-  Clock, 
-  Calendar, 
-  Wallet, 
-  Plane, 
-  Star,
-  Zap,
-  ChevronRight
+  CheckCircle, Clock, Calendar, Wallet, Plane, Zap, ChevronRight,
+  MapPin, AlertCircle
 } from "lucide-react";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, 
   ResponsiveContainer, BarChart, Bar, Cell, PieChart, Pie
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import API from "../../api/axios";
+import { useAuth } from "../../context/AuthContext";
+import toast from "react-hot-toast";
 
 export default function EmployeeDashboard() {
+  const { user } = useAuth();
+  
+  // --- Live Tracking Logic ---
+  const [isTracking, setIsTracking] = useState(false);
+  const [watchId, setWatchId] = useState(null);
+
+  const toggleTracking = () => {
+    if (isTracking) {
+      // Stop Tracking
+      if (watchId !== null) {
+        navigator.geolocation.clearWatch(watchId);
+        setWatchId(null);
+      }
+      setIsTracking(false);
+      toast.success("Live tracking stopped.");
+    } else {
+      // Start Tracking
+      if (!("geolocation" in navigator)) {
+        toast.error("Geolocation is not supported by your browser.");
+        return;
+      }
+      
+      const id = navigator.geolocation.watchPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          // Send location to backend
+          // We limit updates to once every 60s roughly in a real app, 
+          // but watchPosition fires on movement. We'll debounce/throttle in a real scenario.
+          // For this demo, we assume the backend handles it or we send it directly.
+          updateLocation(latitude, longitude);
+        },
+        (error) => {
+          console.error("Tracking error:", error);
+          toast.error("Unable to retrieve location.");
+        },
+        { enableHighAccuracy: true, maximumAge: 10000, timeout: 5000 }
+      );
+      
+      setWatchId(id);
+      setIsTracking(true);
+      toast.success("Live tracking started!");
+    }
+  };
+
+  const updateLocation = async (lat, lng) => {
+    try {
+        await API.put("/users/update-location", { coordinates: [lng, lat] });
+    } catch (err) {
+        console.error("Failed to update location", err);
+    }
+  };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+    };
+  }, [watchId]);
+
+
   // --- Data ---
-  // Isme sabhi metrics ko ek monthly trend me dikhaya gaya hai
   const performanceData = [
     { month: "Jan", tickets: 45, attendance: 95, salary: 25000 },
     { month: "Feb", tickets: 52, attendance: 88, salary: 25000 },
@@ -45,16 +101,43 @@ export default function EmployeeDashboard() {
           <h1 className="text-3xl font-black text-slate-900 tracking-tight">Personal Insights</h1>
           <p className="text-slate-500 font-medium">Tracking your growth and contributions</p>
         </div>
-        <div className="flex items-center gap-4 bg-white p-3 rounded-2xl shadow-sm border border-slate-100">
-          <div className="text-right">
-            <p className="text-[10px] font-bold text-slate-400 uppercase">Performance Score</p>
-            <p className="text-sm font-black text-emerald-600">9.4 / 10</p>
-          </div>
-          <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center text-emerald-600">
-            <Zap size={20} fill="currentColor" />
-          </div>
+        
+        <div className="flex gap-4">
+            {/* Live Tracking Toggle Button */}
+            <button 
+                onClick={toggleTracking}
+                className={`flex items-center gap-3 px-5 py-3 rounded-2xl font-bold transition-all shadow-lg active:scale-95 ${
+                    isTracking 
+                    ? "bg-rose-500 text-white shadow-rose-200" 
+                    : "bg-slate-900 text-white shadow-slate-200 hover:bg-emerald-600"
+                }`}
+            >
+                {isTracking ? <div className="w-3 h-3 bg-white rounded-full animate-pulse"/> : <MapPin size={20} />}
+                {isTracking ? "Stop Tracking" : "Start Duty"}
+            </button>
+
+            <div className="flex items-center gap-4 bg-white p-3 rounded-2xl shadow-sm border border-slate-100 hidden sm:flex">
+              <div className="text-right">
+                <p className="text-[10px] font-bold text-slate-400 uppercase">Performance Score</p>
+                <p className="text-sm font-black text-emerald-600">9.4 / 10</p>
+              </div>
+              <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center text-emerald-600">
+                <Zap size={20} fill="currentColor" />
+              </div>
+            </div>
         </div>
       </div>
+
+       {isTracking && (
+         <motion.div 
+           initial={{ opacity: 0, y: -20 }} 
+           animate={{ opacity: 1, y: 0 }}
+           className="mb-6 p-4 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-center gap-3 text-emerald-800"
+         >
+           <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+           <span className="text-sm font-bold">Live Tracking Active: Your location is being broadcasted to Admin.</span>
+         </motion.div>
+       )}
 
       {/* 🔹 KEY PERFORMANCE STATS */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">

@@ -13,6 +13,7 @@ import NotFound from "../pages/auth/PageNotFound";
 import AdminDashboard from "../pages/dashboard/AdminDashboard";
 import AdminTickets from "../pages/admin/Tickets";
 import AdminAttendance from "../pages/admin/Attendance";
+import AdminMapContainer from "../pages/admin/LiveMap";
 import SalaryManagement from "../pages/employee/Salary";
 
 /* ========== EMPLOYEE ========== */
@@ -47,6 +48,7 @@ export default function AppRouter() {
           <Route path="/add-employee" element={<Employees />} />
           <Route path="/admin-attendance" element={<AdminAttendance />} />
           <Route path="/salary-management" element={<SalaryManagement />} />
+          <Route path="/live-map" element={<AdminMapContainer />} />
         </Route>
       </Route>
 

@@ -47,6 +47,11 @@ export const sidebarMenu = {
       path: "/live-map",
       icon: MapPin,
     },
+    {
+      label: "Applicant",
+      path: "/applicant",
+      icon: Users,
+    },
   ],
 
   EMPLOYEE: [

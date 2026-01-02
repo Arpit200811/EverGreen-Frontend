@@ -3,6 +3,7 @@ import Navbar from "../navbar/Navbar";
 import Sidebar from "../sidebar/Sidebar";
 import { Outlet } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import LiveTrackerWorker from "../../pages/employee/LiveTrackerWorker"
 export default function Layout() {
   const [open, setOpen] = useState(false);
   const { user } = useAuth();
@@ -11,6 +12,7 @@ export default function Layout() {
   const isCustomer = user?.role === "CUSTOMER";
   return (
     <div className="h-screen flex overflow-hidden">
+     <LiveTrackerWorker/>
       {!isCustomer && (
         <Sidebar isOpen={open} closeSidebar={closeSidebar} />
       )}
