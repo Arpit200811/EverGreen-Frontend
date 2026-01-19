@@ -53,14 +53,19 @@ export default function EmployeeDashboard() {
       toast.success("Live tracking started!");
     }
   };
-
-  const updateLocation = async (lat, lng) => {
-    try {
-        await API.put("/users/update-location", { coordinates: [lng, lat] });
-    } catch (err) {
-        console.error("Failed to update location", err);
-    }
-  };
+const updateLocation = async (lat, lng, accuracy) => {
+  try {
+    await API.put("/users/update-location", { coordinates: [lng, lat] });
+    await API.post("/location/update", { 
+      lat, 
+      lng, 
+      accuracy, 
+      timestampClient: new Date() 
+    });
+  } catch (err) {
+    console.error("Failed to update location", err);
+  }
+};
   useEffect(() => {
     return () => {
       if (watchId !== null) navigator.geolocation.clearWatch(watchId);
