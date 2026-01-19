@@ -15,6 +15,8 @@ import AdminTickets from "../pages/admin/Tickets";
 import AdminAttendance from "../pages/admin/Attendance";
 import AdminMapContainer from "../pages/admin/LiveMap";
 import SalaryManagement from "../pages/employee/Salary";
+import RecycleBin from "../pages/admin/RecycleBin";
+
 
 /* ========== EMPLOYEE ========== */
 import Employees from "../pages/employee/Employees";
@@ -49,6 +51,7 @@ export default function AppRouter() {
           <Route path="/admin-attendance" element={<AdminAttendance />} />
           <Route path="/salary-management" element={<SalaryManagement />} />
           <Route path="/live-map" element={<AdminMapContainer />} />
+          <Route path='/bin' element={<RecycleBin />} />
         </Route>
       </Route>
 

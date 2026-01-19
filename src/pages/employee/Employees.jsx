@@ -45,8 +45,6 @@ export default function Employees() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
-
-  // --- 2. REACT HOOK FORM ---
   const {
     register,
     handleSubmit,
@@ -58,14 +56,22 @@ export default function Employees() {
     context: { isNew: !editingEmployee }
   });
 
+
+
+
   const fetchEmployees = async () => {
-    try {
-      const res = await API.get("/users/all");
-      const emp = res.data.filter((u) => u.role === "EMPLOYEE");
-      setEmployees(emp);
-      setFiltered(emp);
-    } catch (error) { console.error(error); }
-  };
+  try {
+    const res = await API.get("/users/all");
+    const employeesOnly = res.data.filter(
+      (u) => u.role === "EMPLOYEE"
+    );
+    setEmployees(employeesOnly);
+    setFiltered(employeesOnly);
+  } catch (err) {
+    console.error("Fetch employees error:", err.response?.data || err.message);
+  }
+};
+
 
   useEffect(() => { fetchEmployees(); }, []);
 

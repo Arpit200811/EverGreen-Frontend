@@ -39,10 +39,6 @@ export default function EmployeeDashboard() {
       const id = navigator.geolocation.watchPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
-          // Send location to backend
-          // We limit updates to once every 60s roughly in a real app, 
-          // but watchPosition fires on movement. We'll debounce/throttle in a real scenario.
-          // For this demo, we assume the backend handles it or we send it directly.
           updateLocation(latitude, longitude);
         },
         (error) => {
@@ -65,8 +61,6 @@ export default function EmployeeDashboard() {
         console.error("Failed to update location", err);
     }
   };
-
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (watchId !== null) navigator.geolocation.clearWatch(watchId);

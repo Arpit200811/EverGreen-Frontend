@@ -31,7 +31,6 @@ export default function AdminAttendance() {
     fetchData();
   }, []);
 
-  // Filter Logic
   useEffect(() => {
     let result = records;
     if (searchTerm) {
@@ -46,7 +45,6 @@ export default function AdminAttendance() {
   }, [searchTerm, dateFilter, records]);
 
   const handleExport = () => {
-    // Basic CSV export logic can be added here
     alert("Exporting CSV...");
   };
 

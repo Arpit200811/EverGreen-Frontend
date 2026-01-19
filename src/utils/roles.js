@@ -48,8 +48,8 @@ export const sidebarMenu = {
       icon: MapPin,
     },
     {
-      label: "Applicant",
-      path: "/applicant",
+      label: "Recycle Bin",
+      path: "/Bin",
       icon: Users,
     },
   ],
