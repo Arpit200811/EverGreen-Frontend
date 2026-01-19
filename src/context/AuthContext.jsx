@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
+import API from "../api/axios";
 
 const AuthContext = createContext(null);
 
@@ -8,19 +9,25 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    const storedToken = localStorage.getItem("token");
+    const initAuth = () => {
+      const storedUser = localStorage.getItem("user");
+      const storedToken = localStorage.getItem("token");
 
-    if (storedUser && storedToken) {
-      setUser(JSON.parse(storedUser));
-      setToken(storedToken);
-    }
-    setLoading(false);
+      if (storedUser && storedToken) {
+        setUser(JSON.parse(storedUser));
+        setToken(storedToken);
+        // Refresh ke baad header wapas set karein
+        API.defaults.headers.common["Authorization"] = `Bearer ${storedToken}`;
+      }
+      setLoading(false);
+    };
+    initAuth();
   }, []);
 
   const login = (userData, token) => {
     setUser(userData);
     setToken(token);
+    API.defaults.headers.common["Authorization"] = `Bearer ${token}`;
     localStorage.setItem("user", JSON.stringify(userData));
     localStorage.setItem("token", token);
   };
@@ -28,12 +35,14 @@ export function AuthProvider({ children }) {
   const logout = () => {
     setUser(null);
     setToken(null);
+    delete API.defaults.headers.common["Authorization"];
     localStorage.clear();
+    window.location.href = "/";
   };
 
   return (
     <AuthContext.Provider value={{ user, token, login, logout, loading }}>
-      {children}
+      {!loading && children}
     </AuthContext.Provider>
   );
 }

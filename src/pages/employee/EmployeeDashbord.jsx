@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { 
   CheckCircle, Clock, Calendar, Wallet, Plane, Zap, ChevronRight,
@@ -16,64 +16,88 @@ import toast from "react-hot-toast";
 export default function EmployeeDashboard() {
   const { user } = useAuth();
   
-  // --- Live Tracking Logic ---
+  // --- States ---
   const [isTracking, setIsTracking] = useState(false);
   const [watchId, setWatchId] = useState(null);
 
-  const toggleTracking = () => {
-    if (isTracking) {
-      // Stop Tracking
-      if (watchId !== null) {
-        navigator.geolocation.clearWatch(watchId);
-        setWatchId(null);
-      }
-      setIsTracking(false);
-      toast.success("Live tracking stopped.");
-    } else {
-      // Start Tracking
-      if (!("geolocation" in navigator)) {
-        toast.error("Geolocation is not supported by your browser.");
-        return;
-      }
-      
-      const id = navigator.geolocation.watchPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          updateLocation(latitude, longitude);
-        },
-        (error) => {
-          console.error("Tracking error:", error);
-          toast.error("Unable to retrieve location.");
-        },
-        { enableHighAccuracy: true, maximumAge: 10000, timeout: 5000 }
-      );
-      
-      setWatchId(id);
-      setIsTracking(true);
-      toast.success("Live tracking started!");
+  // --- API Call function ---
+  const updateLocation = async (lat, lng, accuracy) => {
+    try {
+      // 1. Update User Current Status
+      await API.put("/users/update-location", { coordinates: [lng, lat] });
+      // 2. Log into History (Optional but good for reports)
+      await API.post("/location/update", { 
+        lat, 
+        lng, 
+        accuracy, 
+        timestampClient: new Date() 
+      });
+    } catch (err) {
+      console.error("Failed to update location", err);
     }
   };
-const updateLocation = async (lat, lng, accuracy) => {
-  try {
-    await API.put("/users/update-location", { coordinates: [lng, lat] });
-    await API.post("/location/update", { 
-      lat, 
-      lng, 
-      accuracy, 
-      timestampClient: new Date() 
-    });
-  } catch (err) {
-    console.error("Failed to update location", err);
-  }
-};
+
+  // --- Tracking Logic (Start) ---
+  const startTracking = useCallback(() => {
+    if (!("geolocation" in navigator)) {
+      toast.error("Geolocation is not supported by your browser.");
+      return;
+    }
+
+    const id = navigator.geolocation.watchPosition(
+      (position) => {
+        const { latitude, longitude, accuracy } = position.coords;
+        updateLocation(latitude, longitude, accuracy);
+      },
+      (error) => {
+        console.error("Tracking error:", error);
+        if (error.code === 1) toast.error("Please allow location access to continue duty.");
+      },
+      { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }
+    );
+
+    setWatchId(id);
+    setIsTracking(true);
+    localStorage.setItem("is_on_duty", "true"); // Save state for persistence
+  }, []);
+
+  // --- Tracking Logic (Stop) ---
+  const stopTracking = () => {
+    if (watchId !== null) {
+      navigator.geolocation.clearWatch(watchId);
+      setWatchId(null);
+    }
+    setIsTracking(false);
+    localStorage.setItem("is_on_duty", "false"); // Update persistence
+  };
+
+  // --- Persistence & Auto-Start Effect ---
   useEffect(() => {
+    const isOnDuty = localStorage.getItem("is_on_duty") === "true";
+    
+    // Agar localstorage mein duty true hai aur tracking abhi chalu nahi hai
+    if (isOnDuty && !watchId) {
+      startTracking();
+      toast.success("Resuming your duty session...");
+    }
+
     return () => {
-      if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+      // Cleanup on unmount (Optional: often left active in PWAs)
     };
-  }, [watchId]);
+  }, [startTracking, watchId]);
 
+  // --- Manual Toggle Handle ---
+  const handleToggleDuty = () => {
+    if (isTracking) {
+      stopTracking();
+      toast.success("Duty Ended.");
+    } else {
+      startTracking();
+      toast.success("Duty Started!");
+    }
+  };
 
-  // --- Data ---
+  // --- Chart Data ---
   const performanceData = [
     { month: "Jan", tickets: 45, attendance: 95, salary: 25000 },
     { month: "Feb", tickets: 52, attendance: 88, salary: 25000 },
@@ -97,22 +121,35 @@ const updateLocation = async (lat, lng, accuracy) => {
       {/* 🔹 WELCOME HEADER */}
       <div className="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Personal Insights</h1>
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight tracking-tight capitalize">
+            Hi, {user?.name || "Employee"}!
+          </h1>
           <p className="text-slate-500 font-medium">Tracking your growth and contributions</p>
         </div>
         
         <div className="flex gap-4">
-            {/* Live Tracking Toggle Button */}
             <button 
-                onClick={toggleTracking}
-                className={`flex items-center gap-3 px-5 py-3 rounded-2xl font-bold transition-all shadow-lg active:scale-95 ${
+                onClick={handleToggleDuty}
+                className={`flex items-center gap-3 px-6 py-3 rounded-2xl font-bold transition-all shadow-lg active:scale-95 ${
                     isTracking 
-                    ? "bg-rose-500 text-white shadow-rose-200" 
+                    ? "bg-rose-500 text-white shadow-rose-100" 
                     : "bg-slate-900 text-white shadow-slate-200 hover:bg-emerald-600"
                 }`}
             >
-                {isTracking ? <div className="w-3 h-3 bg-white rounded-full animate-pulse"/> : <MapPin size={20} />}
-                {isTracking ? "Stop Tracking" : "Start Duty"}
+                {isTracking ? (
+                    <div className="flex items-center gap-2">
+                        <span className="relative flex h-3 w-3">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
+                        </span>
+                        Stop Duty
+                    </div>
+                ) : (
+                    <div className="flex items-center gap-2">
+                        <MapPin size={18} />
+                        Start Duty
+                    </div>
+                )}
             </button>
 
             <div className="flex items-center gap-4 bg-white p-3 rounded-2xl shadow-sm border border-slate-100 hidden sm:flex">
@@ -129,12 +166,12 @@ const updateLocation = async (lat, lng, accuracy) => {
 
        {isTracking && (
          <motion.div 
-           initial={{ opacity: 0, y: -20 }} 
-           animate={{ opacity: 1, y: 0 }}
+           initial={{ opacity: 0, scale: 0.95 }} 
+           animate={{ opacity: 1, scale: 1 }}
            className="mb-6 p-4 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-center gap-3 text-emerald-800"
          >
            <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-           <span className="text-sm font-bold">Live Tracking Active: Your location is being broadcasted to Admin.</span>
+           <span className="text-sm font-bold">Live Tracking Active: Your location is being updated automatically.</span>
          </motion.div>
        )}
 
@@ -143,7 +180,7 @@ const updateLocation = async (lat, lng, accuracy) => {
         {[
           { label: "Completed Tickets", val: "328", icon: CheckCircle, color: "text-blue-600", bg: "bg-blue-50" },
           { label: "Attendance Avg", val: "94.2%", icon: Calendar, color: "text-emerald-600", bg: "bg-emerald-50" },
-          { label: "Current Salary", val: "₹30,000", icon: Wallet, color: "text-purple-600", bg: "bg-purple-50" },
+          { label: "Current Salary", val: `₹${user?.baseSalary || 0}`, icon: Wallet, color: "text-purple-600", bg: "bg-purple-50" },
           { label: "Available Leaves", val: "14 Days", icon: Plane, color: "text-amber-600", bg: "bg-amber-50" },
         ].map((stat, i) => (
           <motion.div key={i} whileHover={{ y: -5 }}>
@@ -162,17 +199,13 @@ const updateLocation = async (lat, lng, accuracy) => {
         ))}
       </div>
 
-      {/* 🔹 MAIN COMBINED CHART */}
+      {/* 🔹 MAIN CHART & LEAVE CIRCLE */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
         <Card className="lg:col-span-2 border-none shadow-sm rounded-[2.5rem] overflow-hidden">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <div>
               <CardTitle className="text-xl font-black">Performance & Earnings</CardTitle>
               <p className="text-xs text-slate-400 font-bold">Monthly trend for Tickets and Salary</p>
-            </div>
-            <div className="flex gap-4 text-[10px] font-black uppercase">
-               <span className="flex items-center gap-1 text-blue-500"><div className="w-2 h-2 rounded-full bg-blue-500"/> Tickets</span>
-               <span className="flex items-center gap-1 text-purple-500"><div className="w-2 h-2 rounded-full bg-purple-500"/> Salary</span>
             </div>
           </CardHeader>
           <CardContent className="h-[400px]">
@@ -190,28 +223,13 @@ const updateLocation = async (lat, lng, accuracy) => {
                 <Tooltip 
                   contentStyle={{ borderRadius: '20px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
                 />
-                <Area 
-                  type="monotone" 
-                  dataKey="tickets" 
-                  stroke="#3b82f6" 
-                  strokeWidth={4} 
-                  fillOpacity={1} 
-                  fill="url(#colorTickets)" 
-                />
-                <Area 
-                  type="monotone" 
-                  dataKey="salary" 
-                  stroke="#a855f7" 
-                  strokeWidth={2} 
-                  strokeDasharray="5 5" 
-                  fill="transparent" 
-                />
+                <Area type="monotone" dataKey="tickets" stroke="#3b82f6" strokeWidth={4} fillOpacity={1} fill="url(#colorTickets)" />
+                <Area type="monotone" dataKey="salary" stroke="#a855f7" strokeWidth={2} strokeDasharray="5 5" fill="transparent" />
               </AreaChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
 
-        {/* 🔹 LEAVE & ATTENDANCE CIRCLE */}
         <Card className="border-none shadow-sm rounded-[2.5rem]">
           <CardHeader>
             <CardTitle className="text-xl font-black">Leave Balance</CardTitle>
@@ -220,14 +238,7 @@ const updateLocation = async (lat, lng, accuracy) => {
             <div className="relative h-64 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie
-                    data={leaveData}
-                    innerRadius={80}
-                    outerRadius={100}
-                    paddingAngle={5}
-                    dataKey="value"
-                    stroke="none"
-                  >
+                  <Pie data={leaveData} innerRadius={80} outerRadius={100} paddingAngle={5} dataKey="value" stroke="none">
                     {leaveData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} cornerRadius={10} />
                     ))}
@@ -239,36 +250,21 @@ const updateLocation = async (lat, lng, accuracy) => {
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Days Left</span>
               </div>
             </div>
-            <div className="w-full space-y-3 mt-4">
-              <div className="flex justify-between items-center p-3 bg-slate-50 rounded-2xl">
-                <span className="text-sm font-bold text-slate-600">Total Leaves</span>
-                <span className="text-sm font-black text-slate-800">22</span>
-              </div>
-              <div className="flex justify-between items-center p-3 bg-slate-50 rounded-2xl">
-                <span className="text-sm font-bold text-slate-600">Approved Leaves</span>
-                <span className="text-sm font-black text-emerald-600">08</span>
-              </div>
-            </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* 🔹 BOTTOM ROW: RECENT TICKETS & ATTENDANCE LIST */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <Card className="border-none shadow-sm rounded-[2.5rem]">
-          <CardHeader className="flex flex-row items-center justify-between">
+          <CardHeader>
             <CardTitle className="text-lg font-black text-slate-800">Recent Completed Tickets</CardTitle>
-            <button className="p-2 bg-slate-100 rounded-full hover:bg-slate-200 transition-colors">
-              <ChevronRight size={18} />
-            </button>
           </CardHeader>
           <CardContent className="space-y-4">
             {[
               { id: "#TK-992", title: "Cloud migration error fixed", date: "Today", status: "Perfect" },
               { id: "#TK-841", title: "Employee payroll sync issue", date: "Yesterday", status: "Good" },
-              { id: "#TK-712", title: "UI improvements for Navbar", date: "3 days ago", status: "Perfect" },
             ].map((ticket, i) => (
-              <div key={i} className="flex items-center justify-between p-4 border border-slate-50 rounded-2xl hover:bg-slate-50/50 transition-colors cursor-pointer group">
+              <div key={i} className="flex items-center justify-between p-4 border border-slate-50 rounded-2xl hover:bg-slate-50/50 transition-colors group cursor-pointer">
                 <div className="flex items-center gap-4">
                   <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-all">
                     <CheckCircle size={18} />
@@ -285,22 +281,18 @@ const updateLocation = async (lat, lng, accuracy) => {
         </Card>
 
         <Card className="border-none shadow-sm rounded-[2.5rem]">
-           <CardHeader>
-              <CardTitle className="text-lg font-black text-slate-800">Weekly Attendance Trend</CardTitle>
-           </CardHeader>
-           <CardContent className="h-[250px]">
+            <CardHeader><CardTitle className="text-lg font-black text-slate-800">Weekly Attendance</CardTitle></CardHeader>
+            <CardContent className="h-[250px]">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={performanceData}>
-                  <XAxis dataKey="month" hide />
-                  <Tooltip />
                   <Bar dataKey="attendance" fill="#10b981" radius={[10, 10, 10, 10]} barSize={40} />
                 </BarChart>
               </ResponsiveContainer>
               <div className="mt-4 p-4 bg-emerald-50 rounded-2xl flex items-center gap-3">
                 <Clock className="text-emerald-600" />
-                <p className="text-xs font-bold text-emerald-800">You have been 100% punctual this week! Keep it up.</p>
+                <p className="text-xs font-bold text-emerald-800">100% punctual this week! Keep it up.</p>
               </div>
-           </CardContent>
+            </CardContent>
         </Card>
       </div>
     </motion.div>
